@@ -11,13 +11,24 @@ from typing import List, Optional
 
 import typer
 from rich.console import Console
+from dforge.theme import DFORGE_THEME
 from rich.panel import Panel
 from rich.text import Text
 
 from dforge import __version__
 from dforge.config import DEFAULT_OCR_LANG, DEFAULT_COMPRESS_PRESET, DEFAULT_BATCH_WORKERS
-from dforge.banner import show_banner
 
+
+from dforge.banner import show_banner
+from dforge.menu import main_menu, pdf_menu
+from dforge.workflows.merge import merge_workflow
+from dforge.workflows.compress import compress_workflow
+from dforge.workflows.split import split_workflow
+from dforge.workflows.rotate import rotate_workflow
+from dforge.workflows.pages import pages_workflow
+from dforge.workflows.watermark import watermark_workflow
+from dforge.workflows.encrypt import encrypt_workflow
+from dforge.workflows.decrypt import decrypt_workflow
 app = typer.Typer(
     name="dforge",
     help="DForge - Unified Document Processing CLI. Forge your documents from your terminal.",
@@ -26,7 +37,7 @@ app = typer.Typer(
     no_args_is_help=False,
 )
     
-console = Console()
+console = Console(theme=DFORGE_THEME)
 
 
 def _version_callback(value: bool):
@@ -43,13 +54,63 @@ def _version_callback(value: bool):
 
 @app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     version: Optional[bool] = typer.Option(
-        None, "--version", "-v", callback=_version_callback, is_eager=True,
+        None,
+        "--version",
+        "-v",
+        callback=_version_callback,
+        is_eager=True,
         help="Show DForge version.",
     ),
 ):
-    show_banner()
+    if ctx.invoked_subcommand is not None:
+        return
 
+show_banner()
+
+while True:
+    choice = main_menu()
+
+    if choice == "❌ Exit":
+        raise typer.Exit()
+
+    if choice == "📄 PDF Tools":
+
+        while True:
+            pdf_choice = pdf_menu()
+
+            if pdf_choice == "⬅ Back":
+                break
+
+            if pdf_choice == "Merge PDFs":
+                merge_workflow()
+            elif pdf_choice == "Compress PDF":
+                compress_workflow()
+            elif pdf_choice == "Split PDF":
+                split_workflow()
+            elif pdf_choice == "Rotate PDF":
+                rotate_workflow()
+            elif pdf_choice == "Extract Pages":
+                pages_workflow()
+            elif pdf_choice == "Watermark PDF":
+                watermark_workflow()
+
+            elif pdf_choice == "Encrypt PDF":
+                encrypt_workflow()
+
+            elif pdf_choice == "Decrypt PDF":
+                decrypt_workflow()
+                
+            else:
+                console.print(
+                    f"[yellow]{pdf_choice} workflow not implemented yet[/yellow]"
+                )
+
+    else:
+        console.print(
+            f"[yellow]{choice} not implemented yet[/yellow]"
+        )
 
 # ===========================================================================
 # PDF Commands

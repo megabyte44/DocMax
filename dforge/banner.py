@@ -1,22 +1,31 @@
-from pyfiglet import Figlet
 from rich.console import Console
 from rich.panel import Panel
 from rich.align import Align
-
 
 console = Console()
 
 
 def show_banner():
-    fig = Figlet(font="slant")
+    title = """
+⚡ DFORGE
 
-    banner = fig.renderText("DForge")
+Fast Local Document Automation
+"""
+
+    console.print()
 
     console.print(
         Panel(
-            Align.center(f"[bold cyan]{banner}[/bold cyan]"),
-            title="[bold green]v1.0.0[/bold green]",
-            subtitle="[dim]Forge your documents from your terminal[/dim]",
+            Align.center(f"[bold cyan]{title}[/bold cyan]"),
             border_style="cyan",
+            padding=(1, 4),
         )
     )
+
+    console.print(
+        Align.center(
+            "[dim]Forge your documents from your terminal[/dim]"
+        )
+    )
+
+    console.print()

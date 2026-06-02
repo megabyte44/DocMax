@@ -3,7 +3,7 @@ DForge Utilities - Shared helpers used across all modules.
 """
 
 from __future__ import annotations
-
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -16,6 +16,35 @@ from rich.text import Text
 console = Console()
 
 
+
+
+CONFIG_FILE = Path.cwd() / ".dforge.json"
+
+
+def save_recent_folder(folder: str):
+    try:
+        data = {"recent_folder": folder}
+
+        CONFIG_FILE.write_text(
+            json.dumps(data, indent=4)
+        )
+
+        print("Saved:", CONFIG_FILE)
+
+    except Exception as e:
+        print("ERROR:", e)
+
+
+def load_recent_folder():
+    if not CONFIG_FILE.exists():
+        return None
+
+    try:
+        return json.loads(
+            CONFIG_FILE.read_text()
+        ).get("recent_folder")
+    except Exception:
+        return None
 # ---------------------------------------------------------------------------
 # Output path helpers
 # ---------------------------------------------------------------------------
