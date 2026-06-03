@@ -36,7 +36,11 @@ from dforge.workflows.batch_ocr import batch_ocr_workflow
 from dforge.workflows.tables import tables_workflow
 from dforge.workflows.settings import settings_workflow
 
-
+from dforge.workflows.extract import extract_workflow
+from dforge.workflows.batch import batch_workflow
+from dforge.workflows.automation import automation_workflow
+from dforge.workflows.image import image_workflow
+from dforge.workflows.convert import conversion_workflow
 
 
 
@@ -144,6 +148,20 @@ def main(
                     console.print(
                         f"[yellow]{choice} not implemented yet[/yellow]"
                     )
+        elif choice == "🔄 Conversion":
+            conversion_workflow()
+        
+        elif choice == "📂 Extract":
+            extract_workflow()
+
+        elif choice == "⚡ Batch Processing":
+            batch_workflow()
+
+        elif choice == "👀 Watch Folder":
+            automation_workflow()
+
+        elif choice == "🖼 Image Processing":
+            image_workflow()
 
 # ===========================================================================
 # HELPER Commands

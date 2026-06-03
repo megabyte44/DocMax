@@ -52,3 +52,64 @@ def ocr_menu():
             "⬅ Back",
         ],
     )
+def conversion_menu():
+    return show_menu(
+        "Conversion Tools",
+        [
+            "Markdown → PDF",
+            "Markdown → DOCX",
+            "DOCX → PDF",
+            "DOCX → Markdown",
+            "Images → PDF",
+            "PDF → Images",
+            "⬅ Back",
+        ],
+    )
+def extract_menu():
+    return show_menu(
+        "Extract Tools",
+        [
+            "Extract Text",
+            "Extract Images",
+            "Extract Metadata",
+            "⬅ Back",
+        ],
+    )
+
+
+def batch_menu():
+    return show_menu(
+        "Batch Tools",
+        [
+            "Batch Convert",
+            "Batch Compress",
+            "Batch OCR",
+            "⬅ Back",
+        ],
+    )
+
+
+def automation_menu():
+    return show_menu(
+        "Automation Tools",
+        [
+            "Watch Folder",
+            "Auto OCR",
+            "Auto Convert",
+            "Scheduled Tasks",
+            "⬅ Back",
+        ],
+    )
+
+
+def image_menu():
+    return show_menu(
+        "Image Tools",
+        [
+            "Resize Images",
+            "Convert Format",
+            "Crop Images",
+            "Watermark Images",
+            "⬅ Back",
+        ],
+    )

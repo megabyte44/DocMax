@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from rich.progress import Progress, SpinnerColumn, TextColumn
-
+from dforge.config_manager import get_tool_path
 from dforge.utils import (
     abort, console, ensure_parent, info, require_pandoc, success, warn,
 )
@@ -67,11 +67,15 @@ def convert(
 
     # PDF requires a PDF engine
     if pandoc_to == "pdf":
-        cmd += ["--pdf-engine=xelatex"]
+        xelatex = get_tool_path("xelatex")
+
+        if xelatex:
+            cmd += [f"--pdf-engine={xelatex}"]
+        else:
+            cmd += ["--pdf-engine=xelatex"]
 
     info(f"Converting [bold]{input_path.name}[/bold] -> [bold]{pandoc_to.upper()}[/bold]...")
     result = subprocess.run(cmd, capture_output=True, text=True)
-
     if result.returncode != 0:
         abort(f"Pandoc error:\n{result.stderr}")
 

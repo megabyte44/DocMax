@@ -12,8 +12,9 @@ console = Console()
 def setup_dependencies():
 
     packages = [
-        ("Poppler", "oschwartz10612.Poppler"),
-        ("Pandoc", "JohnMacFarlane.Pandoc"),
+    ("Poppler", "oschwartz10612.Poppler"),
+    ("Pandoc", "JohnMacFarlane.Pandoc"),
+    ("MiKTeX", "MiKTeX.MiKTeX"),
     ]
 
     for name, package_id in packages:
@@ -37,6 +38,7 @@ def setup_dependencies():
     pdfinfo = find_pdfinfo()
     pandoc = find_pandoc()
     tesseract = which("tesseract")
+    xelatex = find_xelatex()
     ghostscript = (
         which("gswin64c")
         or which("gswin32c")
@@ -48,7 +50,8 @@ def setup_dependencies():
 
     if pandoc:
         set_tool_path("pandoc", pandoc)
-
+    if xelatex:
+        set_tool_path("xelatex", xelatex)
     if tesseract:
         set_tool_path("tesseract", tesseract)
 
@@ -72,6 +75,21 @@ def find_pdfinfo():
 
     return None
 
+def find_xelatex():
+    roots = [
+        Path.home() / "AppData/Local/Programs/MiKTeX",
+        Path.home() / "AppData/Local",
+        Path.home() / "AppData/Local/Microsoft/WinGet/Packages",
+        Path("C:/Program Files"),
+    ]
+
+    for root in roots:
+        if root.exists():
+            files = list(root.rglob("xelatex.exe"))
+            if files:
+                return str(files[0])
+
+    return None
 
 def find_pandoc():
     roots = [
