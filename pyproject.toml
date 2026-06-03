@@ -3,10 +3,13 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "dforge"
-version = "1.0.0"
+version = "1.0.1"
 description = "DForge — Unified Document Processing CLI. Forge your documents from your terminal."
 readme = "README.md"
 requires-python = ">=3.9"
+authors = [
+    {name = "Punith Naidu"}
+]
 license = { text = "MIT" }
 keywords = ["pdf", "ocr", "document", "cli", "conversion", "tesseract", "batch"]
 classifiers = [
