@@ -29,7 +29,6 @@ def save_recent_folder(folder: str):
             json.dumps(data, indent=4)
         )
 
-        print("Saved:", CONFIG_FILE)
 
     except Exception as e:
         print("ERROR:", e)

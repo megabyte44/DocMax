@@ -14,13 +14,14 @@ from rich.console import Console
 from dforge.theme import DFORGE_THEME
 from rich.panel import Panel
 from rich.text import Text
+from dforge.setup import setup_dependencies
 
 from dforge import __version__
 from dforge.config import DEFAULT_OCR_LANG, DEFAULT_COMPRESS_PRESET, DEFAULT_BATCH_WORKERS
-
-
+from dforge.dependencies import doctor as run_doctor
 from dforge.banner import show_banner
-from dforge.menu import main_menu, pdf_menu
+from dforge.menu import main_menu, pdf_menu ,ocr_menu
+
 from dforge.workflows.merge import merge_workflow
 from dforge.workflows.compress import compress_workflow
 from dforge.workflows.split import split_workflow
@@ -29,6 +30,16 @@ from dforge.workflows.pages import pages_workflow
 from dforge.workflows.watermark import watermark_workflow
 from dforge.workflows.encrypt import encrypt_workflow
 from dforge.workflows.decrypt import decrypt_workflow
+from dforge.workflows.ocr import ocr_workflow
+from dforge.workflows.searchable import searchable_workflow
+from dforge.workflows.batch_ocr import batch_ocr_workflow
+from dforge.workflows.tables import tables_workflow
+from dforge.workflows.settings import settings_workflow
+
+
+
+
+
 app = typer.Typer(
     name="dforge",
     help="DForge - Unified Document Processing CLI. Forge your documents from your terminal.",
@@ -64,57 +75,93 @@ def main(
         help="Show DForge version.",
     ),
 ):
-    if ctx.invoked_subcommand is not None:
+    if ctx.invoked_subcommand:
         return
 
-show_banner()
+    show_banner()
 
-while True:
-    choice = main_menu()
+    while True:
+        choice = main_menu()
 
-    if choice == "❌ Exit":
-        raise typer.Exit()
+        if choice == "❌ Exit":
+            raise typer.Exit()
 
-    if choice == "📄 PDF Tools":
+        if choice == "📄 PDF Tools":
 
-        while True:
-            pdf_choice = pdf_menu()
+            while True:
+                pdf_choice = pdf_menu()
 
-            if pdf_choice == "⬅ Back":
-                break
+                if pdf_choice == "⬅ Back":
+                    break
 
-            if pdf_choice == "Merge PDFs":
-                merge_workflow()
-            elif pdf_choice == "Compress PDF":
-                compress_workflow()
-            elif pdf_choice == "Split PDF":
-                split_workflow()
-            elif pdf_choice == "Rotate PDF":
-                rotate_workflow()
-            elif pdf_choice == "Extract Pages":
-                pages_workflow()
-            elif pdf_choice == "Watermark PDF":
-                watermark_workflow()
+                if pdf_choice == "Merge PDFs":
+                    merge_workflow()
+                elif pdf_choice == "Compress PDF":
+                    compress_workflow()
+                elif pdf_choice == "Split PDF":
+                    split_workflow()
+                elif pdf_choice == "Rotate PDF":
+                    rotate_workflow()
+                elif pdf_choice == "Extract Pages":
+                    pages_workflow()
+                elif pdf_choice == "Watermark PDF":
+                    watermark_workflow()
 
-            elif pdf_choice == "Encrypt PDF":
-                encrypt_workflow()
+                elif pdf_choice == "Encrypt PDF":
+                    encrypt_workflow()
 
-            elif pdf_choice == "Decrypt PDF":
-                decrypt_workflow()
-                
-            else:
-                console.print(
-                    f"[yellow]{pdf_choice} workflow not implemented yet[/yellow]"
-                )
+                elif pdf_choice == "Decrypt PDF":
+                    decrypt_workflow()
+                    
+                else:
+                    console.print(
+                        f"[yellow]{pdf_choice} workflow not implemented yet[/yellow]"
+                    )
+        elif choice == "🔍 OCR":
 
-    else:
-        console.print(
-            f"[yellow]{choice} not implemented yet[/yellow]"
-        )
+            while True:
 
+                ocr_choice = ocr_menu()
+
+                if ocr_choice == "⬅ Back":
+                    break
+
+                elif ocr_choice == "OCR Image/PDF":
+                    ocr_workflow()
+
+                elif ocr_choice == "Searchable PDF":
+                    searchable_workflow()
+
+                elif ocr_choice == "Batch OCR":
+                    batch_ocr_workflow()
+
+                elif ocr_choice == "Extract Tables":
+                    tables_workflow()
+
+                elif ocr_choice == "OCR Settings":
+                    settings_workflow()
+                else:
+                    console.print(
+                        f"[yellow]{choice} not implemented yet[/yellow]"
+                    )
+
+# ===========================================================================
+# HELPER Commands
+# ===========================================================================
+
+@app.command("doctor")
+def cmd_doctor():
+    """Check external dependencies."""
+    run_doctor()
+
+@app.command("setup")
+def cmd_setup():
+    """Install external dependencies."""
+    setup_dependencies()
 # ===========================================================================
 # PDF Commands
 # ===========================================================================
+
 
 @app.command("merge")
 def cmd_merge(
@@ -435,7 +482,7 @@ def cmd_watch(
     fmt: str = typer.Option("txt", "--fmt", help="OCR output format."),
 ):
     """[bold]Watch[/bold] a directory and auto-process new files."""
-    from dforge.watcher import watch
+
 
     if ocr:
         action = "ocr"

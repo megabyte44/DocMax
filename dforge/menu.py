@@ -33,9 +33,22 @@ def pdf_menu():
             "Compress PDF",
             "Rotate PDF",
             "Extract Pages",
-            "Watermark PDF",
             "Encrypt PDF",
             "Decrypt PDF",
+            "⬅ Back",
+        ],
+    )
+def ocr_menu():
+    return show_menu(
+        "OCR Tools",
+        [
+            "OCR Image/PDF",
+            "Searchable PDF",
+            "Batch OCR",
+            "OCR Folder",
+            "Watch Folder",
+            "Extract Tables",
+            "OCR Settings",
             "⬅ Back",
         ],
     )

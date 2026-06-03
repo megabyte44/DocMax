@@ -1,31 +1,89 @@
-from setuptools import setup, find_packages
+import subprocess
+from shutil import which
 
-setup(
-    name="dforge",
-    version="1.0.0",
-    description="DForge - Forge your documents from your terminal.",
-    author="DForge Contributors",
-    packages=find_packages(),
-    install_requires=[
-        "typer[all]>=0.9.0",
-        "pypdf>=3.0.0",
-        "pikepdf>=8.0.0",
-        "pytesseract>=0.3.10",
-        "Pillow>=10.0.0",
-        "opencv-python-headless>=4.8.0",
-        "img2pdf>=0.4.4",
-        "pdf2image>=1.16.3",
-        "watchdog>=3.0.0",
-        "tqdm>=4.66.0",
-        "rich>=13.0.0",
-        "pdfplumber>=0.10.0",
-        "pandas>=2.0.0",
-        "openpyxl>=3.1.0",
-    ],
-    entry_points={
-        "console_scripts": [
-            "dforge=dforge.cli:app",
-        ],
-    },
-    python_requires=">=3.9",
-)
+from rich.console import Console
+
+from dforge.config_manager import set_tool_path
+from pathlib import Path
+
+console = Console()
+
+
+def setup_dependencies():
+
+    packages = [
+        ("Poppler", "oschwartz10612.Poppler"),
+        ("Pandoc", "JohnMacFarlane.Pandoc"),
+    ]
+
+    for name, package_id in packages:
+
+        console.print(
+            f"[cyan]Installing {name}...[/cyan]"
+        )
+
+        subprocess.run(
+            [
+                "winget",
+                "install",
+                "--id",
+                package_id,
+                "-e",
+            ]
+        )
+
+    # Save discovered tools
+
+    pdfinfo = find_pdfinfo()
+    pandoc = find_pandoc()
+    tesseract = which("tesseract")
+    ghostscript = (
+        which("gswin64c")
+        or which("gswin32c")
+        or which("gs")
+    )
+
+    if pdfinfo:
+        set_tool_path("poppler", pdfinfo)
+
+    if pandoc:
+        set_tool_path("pandoc", pandoc)
+
+    if tesseract:
+        set_tool_path("tesseract", tesseract)
+
+    if ghostscript:
+        set_tool_path("ghostscript", ghostscript)
+
+    console.print(
+        "\n[bold green]Setup complete.[/bold green]"
+    )
+def find_pdfinfo():
+    roots = [
+        Path.home() / "AppData/Local/Microsoft/WinGet/Packages",
+        Path("C:/Program Files"),
+    ]
+
+    for root in roots:
+        if root.exists():
+            files = list(root.rglob("pdfinfo.exe"))
+            if files:
+                return str(files[0])
+
+    return None
+
+
+def find_pandoc():
+    roots = [
+        Path.home() / "AppData/Local/Pandoc",
+        Path("C:/Program Files"),
+        Path.home() / "AppData/Local/Microsoft/WinGet/Packages"
+    ]
+
+    for root in roots:
+        if root.exists():
+            files = list(root.rglob("pandoc.exe"))
+            if files:
+                return str(files[0])
+
+    return None
