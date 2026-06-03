@@ -2,7 +2,7 @@
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 [project]
-name = "dforge"
+name = "dforge-cli"
 version = "1.0.0"
 description = "DForge — Unified Document Processing CLI. Forge your documents from your terminal."
 readme = "README.md"
