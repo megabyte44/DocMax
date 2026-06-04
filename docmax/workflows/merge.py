@@ -7,8 +7,10 @@ from docmax.operations import merge
 
 from docmax.workflows.common import (
     select_multiple_pdfs,
+    show_file_info,
     success_screen,
     get_output_name,
+    failure_screen,
 )
 
 console = Console()
@@ -18,7 +20,8 @@ def merge_workflow():
     console.print("\n[bold cyan]Merge PDFs[/bold cyan]\n")
 
     folder, selected = select_multiple_pdfs()
-
+    for pdf in selected:
+        show_file_info(folder / pdf)
     if not folder or not selected:
         return
 
@@ -86,16 +89,28 @@ def merge_workflow():
         for pdf in selected
     ]
 
-    merge(inputs, output_path)
+    try:
 
-    success_screen(
-        "Merge Complete",
-        output_file=output_path.name,
-        extra_lines=[
-            f"Input Files : {len(selected)}",
-            f"Location    : {output_path.resolve()}",
-        ],
-    )
+        merge(
+            inputs,
+            output_path,
+        )
+
+        success_screen(
+            "Merge Complete",
+            output_file=output_path.name,
+            extra_lines=[
+                f"Input Files : {len(selected)}",
+                f"Location    : {output_path.resolve()}",
+            ],
+        )
+
+    except Exception as e:
+
+        failure_screen(
+            "Merge Failed",
+            str(e),
+        )
 
     next_action = questionary.select(
         "What next?",

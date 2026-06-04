@@ -3,11 +3,17 @@ from pathlib import Path
 import questionary
 from rich.console import Console
 from rich.panel import Panel
-
+from rich.errors import LiveError
 from docmax.utils import save_recent_folder, load_recent_folder
 
 console = Console()
+def show_file_info(path):
+    size_mb = path.stat().st_size / 1024 / 1024
 
+    console.print(
+        f"[cyan]{path.name}[/cyan]"
+        f"  ({size_mb:.2f} MB)"
+    )
 
 def select_folder():
     recent_folder = load_recent_folder()
@@ -73,7 +79,26 @@ def select_multiple_pdfs():
 
     return folder, selected
 
+def processing_screen(
+    title,
+    details=None,
+):
+    body = ""
 
+    if details:
+        body += "\n".join(details)
+
+    console.print()
+
+    console.print(
+        Panel(
+            body,
+            title=title,
+            border_style="cyan",
+        )
+    )
+
+    console.print()
 def select_single_pdf():
     folder = select_folder()
 
@@ -97,6 +122,19 @@ def select_single_pdf():
         return None
 
     return folder / selected
+
+def show_file_info(path):
+    size_mb = (
+        path.stat().st_size
+        / 1024
+        / 1024
+    )
+
+    console.print(
+        f"[cyan]File:[/cyan] "
+        f"{path.name} "
+        f"({size_mb:.2f} MB)\n"
+    )
 
 def select_single_image():
     folder = select_folder()
@@ -135,7 +173,6 @@ def select_single_image():
         return None
 
     return folder / selected
-
 def success_screen(
     title,
     output_file=None,
@@ -150,6 +187,12 @@ def success_screen(
         for line in extra_lines:
             body += f"\n{line}"
 
+    try:
+        console.clear_live()
+
+    except (AttributeError, LiveError):
+        pass
+
     console.print()
 
     console.print(
@@ -161,8 +204,31 @@ def success_screen(
     )
 
     console.print()
+def failure_screen(
+    title,
+    reason,
+):
+    body = f"✗ {title}\n"
 
+    body += f"\nReason : {reason}"
 
+    try:
+        console.clear_live()
+
+    except (AttributeError, LiveError):
+        pass
+
+    console.print()
+
+    console.print(
+        Panel(
+            body,
+            title="Failed",
+            border_style="red",
+        )
+    )
+
+    console.print()
 def get_output_name(default_name):
     return questionary.text(
         "Output file:",

@@ -6,6 +6,7 @@ from docmax.loading import Loader
 from docmax.engine import ocr_image, ocr_pdf
 from docmax.dependencies import has_poppler
 from docmax.workflows.common import (
+    failure_screen,
     success_screen,
     get_output_name,
 )
@@ -38,11 +39,6 @@ def ocr_workflow():
     console.print("\n[bold cyan]OCR Image / PDF[/bold cyan]\n")
 
 
-    if not input_file:
-        return
-
-    input_file = Path(input_file)
-
     lang = questionary.text(
         "OCR Language(s)",
         default="eng",
@@ -66,37 +62,47 @@ def ocr_workflow():
 
     output_path = Path(output)
 
+    try:
+        with Loader("Running OCR..."):
+            if input_file.suffix.lower() == ".pdf":
+                ocr_pdf(
+                    input_file,
+                    output_path,
+                    lang,
+                )
+            else:
+                ocr_image(
+                    input_file,
+                    output_path,
+                    lang,
+                    fmt,
+                )
 
-    with Loader("Running OCR..."):
-         ocr_pdf(
-            input_file,
-            output_path,
-            lang,
-        )
+            if input_file.suffix.lower() == ".pdf":
+                ocr_pdf(
+                    input_file,
+                    output_path,
+                    lang,
+                    fmt,
+                )
+            else:
+                ocr_image(
+                    input_file,
+                    output_path,
+                    lang,
+                    fmt,
+                )
 
-    if input_file.suffix.lower() == ".pdf":
-        ocr_pdf(
-            input_file,
-            output_path,
-            lang,
-            fmt,
+        success_screen(
+            "OCR Complete",
+            output_file=output_path.name,
+            extra_lines=[
+                f"Format : {fmt}",
+                f"Lang   : {lang}",
+            ],
         )
-    else:
-        ocr_image(
-            input_file,
-            output_path,
-            lang,
-            fmt,
-        )
-
-    success_screen(
-        "OCR Complete",
-        output_file=output_path.name,
-        extra_lines=[
-            f"Format : {fmt}",
-            f"Lang   : {lang}",
-        ],
-    )
+    except Exception as e:
+        failure_screen("OCR Failed", str(e))
     if not has_poppler():
         console.print(
             "[red]Poppler not installed.[/red]"

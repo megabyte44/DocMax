@@ -2,31 +2,52 @@ from pathlib import Path
 
 from rich.console import Console
 from rich.table import Table
-
+from shutil import which
 from docmax.config_manager import get_tool_path
 
 console = Console()
 
 
-def has_poppler():
-    path = get_tool_path("poppler")
-    return path is not None and Path(path).exists()
+def has_pandoc():
+    path = (
+        get_tool_path("pandoc")
+        or which("pandoc")
+    )
 
+    return path is not None
 
 def has_tesseract():
-    path = get_tool_path("tesseract")
-    return path is not None and Path(path).exists()
+    path = (
+        get_tool_path("tesseract")
+        or which("tesseract")
+    )
 
+    return path is not None
 
 def has_pandoc():
-    path = get_tool_path("pandoc")
-    return path is not None and Path(path).exists()
+    path = (
+        get_tool_path("pandoc")
+        or which("pandoc")
+    )
 
+    return path is not None
 
 def has_ghostscript():
-    path = get_tool_path("ghostscript")
-    return path is not None and Path(path).exists()
+    path = (
+        get_tool_path("ghostscript")
+        or which("gswin64c")
+        or which("gswin32c")
+        or which("gs")
+    )
 
+    return path is not None
+def has_poppler():
+    path = (
+        get_tool_path("poppler")
+        or which("pdftotext")
+    )
+
+    return path is not None
 
 def doctor():
     table = Table(title="DocMax System Check")

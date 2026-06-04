@@ -21,6 +21,7 @@ from docmax.config import DEFAULT_OCR_LANG, DEFAULT_COMPRESS_PRESET, DEFAULT_BAT
 from docmax.dependencies import doctor as run_doctor
 from docmax.banner import show_banner
 from docmax.menu import main_menu, pdf_menu ,ocr_menu
+from docmax.watcher import watch
 
 from docmax.workflows.merge import merge_workflow
 from docmax.workflows.compress import compress_workflow
@@ -83,87 +84,90 @@ def main(
         return
 
     show_banner()
+    try:
+        while True:
+            choice = main_menu()
 
-    while True:
-        choice = main_menu()
+            if choice == "❌ Exit":
+                raise typer.Exit()
 
-        if choice == "❌ Exit":
-            raise typer.Exit()
+            if choice == "📄 PDF Tools":
 
-        if choice == "📄 PDF Tools":
+                while True:
+                    pdf_choice = pdf_menu()
 
-            while True:
-                pdf_choice = pdf_menu()
+                    if pdf_choice == "⬅ Back":
+                        break
 
-                if pdf_choice == "⬅ Back":
-                    break
+                    if pdf_choice == "Merge PDFs":
+                        merge_workflow()
+                    elif pdf_choice == "Compress PDF":
+                        compress_workflow()
+                    elif pdf_choice == "Split PDF":
+                        split_workflow()
+                    elif pdf_choice == "Rotate PDF":
+                        rotate_workflow()
+                    elif pdf_choice == "Extract Pages":
+                        pages_workflow()
+                    elif pdf_choice == "Watermark PDF":
+                        watermark_workflow()
 
-                if pdf_choice == "Merge PDFs":
-                    merge_workflow()
-                elif pdf_choice == "Compress PDF":
-                    compress_workflow()
-                elif pdf_choice == "Split PDF":
-                    split_workflow()
-                elif pdf_choice == "Rotate PDF":
-                    rotate_workflow()
-                elif pdf_choice == "Extract Pages":
-                    pages_workflow()
-                elif pdf_choice == "Watermark PDF":
-                    watermark_workflow()
+                    elif pdf_choice == "Encrypt PDF":
+                        encrypt_workflow()
 
-                elif pdf_choice == "Encrypt PDF":
-                    encrypt_workflow()
+                    elif pdf_choice == "Decrypt PDF":
+                        decrypt_workflow()
+                        
+                    else:
+                        console.print(
+                            f"[yellow]{pdf_choice} workflow not implemented yet[/yellow]"
+                        )
+            elif choice == "🔍 OCR":
 
-                elif pdf_choice == "Decrypt PDF":
-                    decrypt_workflow()
-                    
-                else:
-                    console.print(
-                        f"[yellow]{pdf_choice} workflow not implemented yet[/yellow]"
-                    )
-        elif choice == "🔍 OCR":
+                while True:
 
-            while True:
+                    ocr_choice = ocr_menu()
 
-                ocr_choice = ocr_menu()
+                    if ocr_choice == "⬅ Back":
+                        break
 
-                if ocr_choice == "⬅ Back":
-                    break
+                    elif ocr_choice == "OCR Image/PDF":
+                        ocr_workflow()
 
-                elif ocr_choice == "OCR Image/PDF":
-                    ocr_workflow()
+                    elif ocr_choice == "Searchable PDF":
+                        searchable_workflow()
 
-                elif ocr_choice == "Searchable PDF":
-                    searchable_workflow()
+                    elif ocr_choice == "Batch OCR":
+                        batch_ocr_workflow()
 
-                elif ocr_choice == "Batch OCR":
-                    batch_ocr_workflow()
+                    elif ocr_choice == "Extract Tables":
+                        tables_workflow()
 
-                elif ocr_choice == "Extract Tables":
-                    tables_workflow()
+                    elif ocr_choice == "OCR Settings":
+                        settings_workflow()
+                    else:
+                        console.print(
+                            f"[yellow]{choice} not implemented yet[/yellow]"
+                        )
+            elif choice == "🔄 Conversion":
+                conversion_workflow()
+            
+            elif choice == "📂 Extract":
+                extract_workflow()
 
-                elif ocr_choice == "OCR Settings":
-                    settings_workflow()
-                else:
-                    console.print(
-                        f"[yellow]{choice} not implemented yet[/yellow]"
-                    )
-        elif choice == "🔄 Conversion":
-            conversion_workflow()
-        
-        elif choice == "📂 Extract":
-            extract_workflow()
+            elif choice == "⚡ Batch Processing":
+                batch_workflow()
 
-        elif choice == "⚡ Batch Processing":
-            batch_workflow()
+            elif choice == "👀 Watch Folder":
+                automation_workflow()
 
-        elif choice == "👀 Watch Folder":
-            automation_workflow()
-
-        elif choice == "🖼 Image Processing":
-            image_workflow()
-        elif choice == "⚙ Settings":
-            settings_workflow()
+            elif choice == "🖼 Image Processing":
+                image_workflow()
+            elif choice == "⚙ Settings":
+                settings_workflow()
+    except KeyboardInterrupt:
+        console.print("\n[red]Exiting...[/red]")
+        return
 
 # ===========================================================================
 # HELPER Commands

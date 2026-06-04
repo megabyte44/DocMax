@@ -6,6 +6,7 @@ from rich.console import Console
 from docmax.operations import encrypt
 
 from docmax.workflows.common import (
+    failure_screen,
     select_single_pdf,
     success_screen,
     get_output_name,
@@ -37,14 +38,16 @@ def encrypt_workflow():
         return
 
     output_path = Path(output)
+    try:
+        encrypt(
+            pdf,
+            password,
+            output_path,
+        )
 
-    encrypt(
-        pdf,
-        password,
-        output_path,
-    )
-
-    success_screen(
-        "Encryption Complete",
-        output_file=output_path.name,
-    )
+        success_screen(
+            "Encryption Complete",
+            output_file=output_path.name,
+        )
+    except Exception as e:
+        failure_screen("Encryption Failed", str(e))

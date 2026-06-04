@@ -6,6 +6,7 @@ from rich.console import Console
 from docmax.operations import watermark
 
 from docmax.workflows.common import (
+    failure_screen,
     select_single_pdf,
     success_screen,
     get_output_name,
@@ -41,14 +42,16 @@ def watermark_workflow():
     console.print(
         "\n[bold cyan]Applying Watermark...[/bold cyan]\n"
     )
+    try:
+        watermark(
+            pdf,
+            Path(watermark_file),
+            output_path,
+        )
 
-    watermark(
-        pdf,
-        Path(watermark_file),
-        output_path,
-    )
-
-    success_screen(
-        "Watermark Complete",
-        output_file=output_path.name,
-    )
+        success_screen(
+            "Watermark Complete",
+            output_file=output_path.name,
+        )
+    except Exception as e:
+        failure_screen("Watermark Failed", str(e))

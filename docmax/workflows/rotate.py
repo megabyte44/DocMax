@@ -6,6 +6,7 @@ from rich.console import Console
 from docmax.operations import rotate
 
 from docmax.workflows.common import (
+    failure_screen,
     select_single_pdf,
     success_screen,
     get_output_name,
@@ -38,16 +39,19 @@ def rotate_workflow():
 
     output_path = Path(output)
 
-    rotate(
+    
+    try:
+        rotate(
         pdf,
         degrees,
         output_path,
-    )
-
-    success_screen(
-        "Rotation Complete",
-        output_file=output_path.name,
-        extra_lines=[
-            f"Rotation : {degrees}°",
-        ],
-    )
+        )
+        success_screen(
+            "Rotation Complete",
+            output_file=output_path.name,
+            extra_lines=[
+                f"Rotation : {degrees}°",
+            ],
+        )
+    except Exception as e:
+        failure_screen("Rotation Failed", str(e))

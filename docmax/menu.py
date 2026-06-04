@@ -16,6 +16,7 @@ def main_menu():
             "🔍 OCR",
             "🔄 Conversion",
             "🖼 Image Processing",
+            "📂 Extract",
             "⚡ Batch Processing",
             "👀 Watch Folder",
             "⚙ Settings",
@@ -89,17 +90,7 @@ def batch_menu():
     )
 
 
-def automation_menu():
-    return show_menu(
-        "Automation Tools",
-        [
-            "Watch Folder",
-            "Auto OCR",
-            "Auto Convert",
-            "Scheduled Tasks",
-            "⬅ Back",
-        ],
-    )
+
 
 
 def image_menu():

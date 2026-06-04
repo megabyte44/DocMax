@@ -6,6 +6,7 @@ from rich.console import Console
 from docmax.operations import decrypt
 
 from docmax.workflows.common import (
+    failure_screen,
     select_single_pdf,
     success_screen,
     get_output_name,
@@ -37,14 +38,17 @@ def decrypt_workflow():
         return
 
     output_path = Path(output)
+    try:
 
-    decrypt(
-        pdf,
-        password,
-        output_path,
-    )
+        decrypt(
+            pdf,
+            password,
+            output_path,
+        )
 
-    success_screen(
-        "Decryption Complete",
-        output_file=output_path.name,
-    )
+        success_screen(
+            "Decryption Complete",
+            output_file=output_path.name,
+        )
+    except Exception as e:
+        failure_screen("Decryption Failed", str(e))

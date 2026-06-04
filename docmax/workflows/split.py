@@ -5,6 +5,7 @@ from docmax.operations import split
 from docmax.workflows.common import (
     select_single_pdf,
     success_screen,
+    failure_screen
 )
 
 console = Console()
@@ -22,11 +23,14 @@ def split_workflow():
         "\n[bold cyan]Splitting PDF...[/bold cyan]\n"
     )
 
-    split(pdf)
-
-    success_screen(
-        "Split Complete",
-        extra_lines=[
-            f"Source : {pdf.name}",
-        ],
-    )
+    
+    try:
+        split(pdf)
+        success_screen(
+                "Split Complete",
+                extra_lines=[
+                    f"Source : {pdf.name}",
+                ],
+            )
+    except Exception as e:
+        failure_screen("Split Failed", str(e))

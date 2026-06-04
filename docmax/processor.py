@@ -34,8 +34,11 @@ def _load_cv2(path: Path):
         import cv2
         import numpy as np
     except ImportError:
-        abort("opencv-python-headless is required. Run: pip install opencv-python-headless")
-
+        abort(
+            "OpenCV not installed.\n"
+            "Run:\n"
+            "pip install docmax[image]"
+        )
     img = cv2.imread(str(path))
     if img is None:
         abort(f"Could not read image: {path}")
@@ -93,7 +96,11 @@ def deskew(input_path: Path, output: Optional[Path] = None) -> None:
         import cv2
         import numpy as np
     except ImportError:
-        abort("opencv-python-headless is required.")
+        abort(
+            "OpenCV not installed.\n"
+            "Run:\n"
+            "pip install docmax[image]"
+        )
 
     img = _load_cv2(input_path)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
@@ -128,8 +135,11 @@ def denoise(input_path: Path, output: Optional[Path] = None) -> None:
     try:
         import cv2
     except ImportError:
-        abort("opencv-python-headless is required.")
-
+        abort(
+            "OpenCV not installed.\n"
+            "Run:\n"
+            "pip install docmax[image]"
+        )
     img = _load_cv2(input_path)
 
     if len(img.shape) == 2:  # grayscale
@@ -205,7 +215,7 @@ def preprocess_for_ocr(input_path: Path, output: Optional[Path] = None) -> Path:
         import numpy as np
         from PIL import Image, ImageEnhance, ImageOps
     except ImportError:
-        abort("opencv-python-headless and Pillow are required.")
+        abort("OpenCV and Pillow are required.\n" "Run:\n" "pip install docmax[image]")
 
     if not input_path.exists():
         abort(f"File not found: {input_path}")

@@ -424,7 +424,16 @@ def add_text_watermark(
 
 def remove_background(input_path, output_path):
 
-    from rembg import remove
+    try:
+        from rembg import remove
+
+    except ImportError:
+
+        abort(
+            "Background removal requires extra packages.\n"
+            "Run:\n"
+            "pip install docmax[image]"
+        )
 
     with open(input_path, "rb") as f:
         data = f.read()
