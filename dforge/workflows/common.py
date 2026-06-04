@@ -98,6 +98,43 @@ def select_single_pdf():
 
     return folder / selected
 
+def select_single_image():
+    folder = select_folder()
+
+    if not folder:
+        return None
+
+    image_extensions = [
+        "*.png",
+        "*.jpg",
+        "*.jpeg",
+        "*.bmp",
+        "*.webp",
+        "*.tiff"
+    ]
+
+    images = []
+
+    for ext in image_extensions:
+        images.extend(folder.glob(ext))
+
+    images = sorted(images)
+
+    if not images:
+        console.print(
+            "[red]No image files found.[/red]"
+        )
+        return None
+
+    selected = questionary.select(
+        "Select Image",
+        choices=[img.name for img in images],
+    ).ask()
+
+    if not selected:
+        return None
+
+    return folder / selected
 
 def success_screen(
     title,

@@ -108,8 +108,33 @@ def image_menu():
         [
             "Resize Images",
             "Convert Format",
+            "Compress Images",
+            "Rotate Images",
             "Crop Images",
             "Watermark Images",
+            "Remove Background",
+            "⬅ Back",
+        ],
+    )
+def automation_menu():
+    return show_menu(
+        "Automation Tools",
+        [
+            "Auto OCR",
+            "Auto Searchable PDF",
+            "Auto Compress PDF",
+            "Auto Preprocess Images",
+            "⬅ Back",
+        ],
+    )
+def settings_menu():
+    return show_menu(
+        "Settings",
+        [
+            "OCR Settings",
+            "System Check",
+            "Run Setup",
+            "Show Tool Paths",
             "⬅ Back",
         ],
     )

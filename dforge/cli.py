@@ -162,6 +162,8 @@ def main(
 
         elif choice == "🖼 Image Processing":
             image_workflow()
+        elif choice == "⚙ Settings":
+            settings_workflow()
 
 # ===========================================================================
 # HELPER Commands

@@ -18,7 +18,7 @@ from dforge.utils import (
     info, require_ghostscript, resolve_output, success, warn,
 )
 from dforge.config import DEFAULT_COMPRESS_PRESET
-
+from PIL import Image, ImageOps, ImageDraw, ImageFont
 
 # ---------------------------------------------------------------------------
 # Merge
@@ -312,3 +312,124 @@ def decrypt(input_path: Path, password: str, output: Optional[Path] = None) -> N
     with open(out, "wb") as fh:
         writer.write(fh)
     success(f"Decrypted -> [bold]{out}[/bold]")
+
+
+
+def resize_image(input_path, output_path, width, height):
+    with Image.open(input_path) as img:
+        img.resize((width, height)).save(output_path)
+
+
+def convert_image(input_path, output_path, fmt):
+    with Image.open(input_path) as img:
+        if fmt.upper() in ["JPEG", "JPG"]:
+            img = img.convert("RGB")
+
+        img.save(output_path, format=fmt.upper())
+
+
+def compress_image(input_path, output_path, quality=85):
+    with Image.open(input_path) as img:
+        img.save(
+            output_path,
+            optimize=True,
+            quality=quality
+        )
+
+
+def rotate_image(input_path, output_path, angle):
+    with Image.open(input_path) as img:
+        img.rotate(-angle, expand=True).save(output_path)
+
+
+def crop_image(input_path, output_path,
+               left, top, right, bottom):
+
+    with Image.open(input_path) as img:
+
+        width, height = img.size
+
+        left = max(0, left)
+        top = max(0, top)
+
+        right = min(width, right)
+        bottom = min(height, bottom)
+
+        if left >= right:
+            raise ValueError(
+                "Right must be greater than Left."
+            )
+
+        if top >= bottom:
+            raise ValueError(
+                "Bottom must be greater than Top."
+            )
+
+        cropped = img.crop(
+            (left, top, right, bottom)
+        )
+
+        cropped.save(output_path)
+
+
+def flip_horizontal(input_path, output_path):
+    with Image.open(input_path) as img:
+        ImageOps.mirror(img).save(output_path)
+
+
+def flip_vertical(input_path, output_path):
+    with Image.open(input_path) as img:
+        ImageOps.flip(img).save(output_path)
+
+def add_text_watermark(
+        input_path,
+        output_path,
+        text):
+
+    with Image.open(input_path).convert("RGBA") as base:
+
+        overlay = Image.new(
+            "RGBA",
+            base.size,
+            (255, 255, 255, 0)
+        )
+
+        draw = ImageDraw.Draw(overlay)
+
+        try:
+            font = ImageFont.truetype(
+                "arial.ttf",
+                40
+            )
+        except:
+            font = ImageFont.load_default()
+
+        x = base.width - 250
+        y = base.height - 60
+
+        draw.text(
+            (x, y),
+            text,
+            fill=(255, 255, 255, 150),
+            font=font
+        )
+
+        result = Image.alpha_composite(
+            base,
+            overlay
+        )
+
+        result.convert("RGB").save(output_path)
+
+
+def remove_background(input_path, output_path):
+
+    from rembg import remove
+
+    with open(input_path, "rb") as f:
+        data = f.read()
+
+    result = remove(data)
+
+    with open(output_path, "wb") as f:
+        f.write(result)
