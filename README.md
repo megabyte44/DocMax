@@ -1,4 +1,4 @@
-# DForge — Forge your documents from your terminal.
+# DocMax — Forge your documents from your terminal.
 
 A unified, offline-first Python CLI for all your document processing needs.
 
@@ -7,7 +7,7 @@ A unified, offline-first Python CLI for all your document processing needs.
 ## Installation
 
 ```bash
-pip install dforge
+pip install DocMax
 ```
 
 ### External Dependencies
@@ -27,130 +27,130 @@ pip install dforge
 
 ```bash
 # Merge PDFs
-dforge merge a.pdf b.pdf c.pdf -o merged.pdf
+DocMax merge a.pdf b.pdf c.pdf -o merged.pdf
 
 # Split into pages
-dforge split report.pdf
+DocMax split report.pdf
 
 # Compress (uses Ghostscript)
-dforge compress large.pdf --preset ebook
+DocMax compress large.pdf --preset ebook
 
 # Rotate pages
-dforge rotate file.pdf 90
+DocMax rotate file.pdf 90
 
 # Extract page range
-dforge pages file.pdf 1-5
+DocMax pages file.pdf 1-5
 
 # Watermark
-dforge watermark file.pdf logo.png
+DocMax watermark file.pdf logo.png
 
 # Encrypt / Decrypt
-dforge encrypt file.pdf
-dforge decrypt protected.pdf
+DocMax encrypt file.pdf
+DocMax decrypt protected.pdf
 ```
 
 ### OCR
 
 ```bash
 # OCR an image
-dforge ocr scan.png
+DocMax ocr scan.png
 
 # OCR a PDF
-dforge ocr scan.pdf
+DocMax ocr scan.pdf
 
 # Output as JSON or Markdown
-dforge ocr scan.pdf --fmt json
-dforge ocr scan.pdf --fmt md
+DocMax ocr scan.pdf --fmt json
+DocMax ocr scan.pdf --fmt md
 
 # Multi-language OCR
-dforge ocr scan.png --lang eng+hin
+DocMax ocr scan.png --lang eng+hin
 
 # Make a scanned PDF searchable
-dforge searchable scan.pdf
+DocMax searchable scan.pdf
 
 # Batch OCR an entire folder
-dforge batch-ocr invoices/
+DocMax batch-ocr invoices/
 ```
 
 ### Document Conversion
 
 ```bash
 # Convert DOCX → PDF
-dforge convert report.docx pdf
+DocMax convert report.docx pdf
 
 # Convert Markdown → HTML
-dforge convert notes.md html
+DocMax convert notes.md html
 
 # Combine images into a PDF
-dforge img2pdf scans/
+DocMax img2pdf scans/
 
 # Export PDF pages as images
-dforge pdf2img report.pdf --dpi 300 --fmt png
+DocMax pdf2img report.pdf --dpi 300 --fmt png
 ```
 
 ### Content Extraction
 
 ```bash
 # Extract text
-dforge text report.pdf
+DocMax text report.pdf
 
 # Extract embedded images
-dforge images report.pdf
+DocMax images report.pdf
 
 # Show / save metadata
-dforge metadata report.pdf
-dforge metadata report.pdf -o meta.json
+DocMax metadata report.pdf
+DocMax metadata report.pdf -o meta.json
 
 # Extract tables
-dforge tables invoice.pdf --fmt xlsx
-dforge tables invoice.pdf --fmt csv
-dforge tables invoice.pdf --fmt json
+DocMax tables invoice.pdf --fmt xlsx
+DocMax tables invoice.pdf --fmt csv
+DocMax tables invoice.pdf --fmt json
 ```
 
 ### Image Processing
 
 ```bash
 # Enhance (contrast + sharpness)
-dforge enhance scan.png
+DocMax enhance scan.png
 
 # Fix skewed scans
-dforge deskew scan.png
+DocMax deskew scan.png
 
 # Remove noise
-dforge denoise scan.png
+DocMax denoise scan.png
 
 # Resize
-dforge resize photo.png --width 800
-dforge resize photo.png --scale 0.5
+DocMax resize photo.png --width 800
+DocMax resize photo.png --scale 0.5
 
 # Full OCR preprocessing pipeline
-dforge preprocess scan.png
+DocMax preprocess scan.png
 ```
 
 ### Batch Processing
 
 ```bash
 # Batch OCR with 8 workers
-dforge batch ./documents --ocr --workers 8
+DocMax batch ./documents --ocr --workers 8
 
 # Batch compress
-dforge batch ./pdfs --compress
+DocMax batch ./pdfs --compress
 
 # Batch convert to markdown
-dforge batch ./docs --convert md
+DocMax batch ./docs --convert md
 ```
 
 ### Watch Mode
 
 ```bash
 # Auto-OCR new files dropped into a folder
-dforge watch ./incoming --ocr
+DocMax watch ./incoming --ocr
 
 # Auto-make-searchable
-dforge watch ./scans --searchable
+DocMax watch ./scans --searchable
 
 # Auto-compress
-dforge watch ./uploads --compress
+DocMax watch ./uploads --compress
 ```
 
 ---
@@ -158,7 +158,7 @@ dforge watch ./uploads --compress
 ## Project Structure
 
 ```
-dforge/
+DocMax/
 ├── cli.py           ← Typer CLI entry point
 ├── config.py        ← Global configuration
 ├── utils.py         ← Shared utilities
@@ -194,4 +194,4 @@ dforge/
 
 ## License
 
-MIT License — DForge Contributors
+MIT License — DocMax Contributors
