@@ -13,6 +13,7 @@ from typing import List, Optional
 
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
+from docmax.processor import preprocess_for_ocr
 from docmax.utils import (
     abort, console, ensure_parent, info, require_tesseract, success, warn,
 )
@@ -85,7 +86,8 @@ def ocr_image(
         abort(f"File not found: {input_path}")
 
     info(f"Running OCR on [bold]{input_path.name}[/bold] (lang: {lang})...")
-    text = _run_tesseract(input_path, lang)
+    processed = preprocess_for_ocr(input_path)
+    text = _run_tesseract(processed, lang)
 
     ext_map = {"txt": ".txt", "json": ".json", "md": ".md"}
     ext = ext_map.get(fmt, ".txt")
@@ -119,7 +121,8 @@ def ocr_pdf(
     ) as progress:
         task = progress.add_task("Running OCR...", total=len(images))
         for img in images:
-            text = _run_tesseract(img, lang)
+            processed = preprocess_for_ocr(img)
+            text = _run_tesseract(processed, lang)
             all_text_parts.append(text)
             progress.advance(task)
             # Cleanup temp image

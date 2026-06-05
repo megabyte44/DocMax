@@ -64,19 +64,6 @@ def ocr_workflow():
 
     try:
         with Loader("Running OCR..."):
-            if input_file.suffix.lower() == ".pdf":
-                ocr_pdf(
-                    input_file,
-                    output_path,
-                    lang,
-                )
-            else:
-                ocr_image(
-                    input_file,
-                    output_path,
-                    lang,
-                    fmt,
-                )
 
             if input_file.suffix.lower() == ".pdf":
                 ocr_pdf(
