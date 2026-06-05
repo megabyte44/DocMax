@@ -22,7 +22,7 @@ from docmax.dependencies import doctor as run_doctor
 from docmax.banner import show_banner
 from docmax.menu import main_menu, pdf_menu ,ocr_menu
 from docmax.watcher import watch
-
+from docmax.help import show_install_help
 from docmax.workflows.merge import merge_workflow
 from docmax.workflows.compress import compress_workflow
 from docmax.workflows.split import split_workflow
@@ -165,6 +165,8 @@ def main(
                 image_workflow()
             elif choice == "⚙ Settings":
                 settings_workflow()
+            elif choice == "📦 Install Guide":
+                show_install_help()
     except KeyboardInterrupt:
         console.print("\n[red]Exiting...[/red]")
         return

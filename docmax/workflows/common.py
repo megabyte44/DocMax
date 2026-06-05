@@ -190,7 +190,7 @@ def success_screen(
     try:
         console.clear_live()
 
-    except (AttributeError, LiveError):
+    except (AttributeError, LiveError,IndexError):
         pass
 
     console.print()
@@ -204,6 +204,7 @@ def success_screen(
     )
 
     console.print()
+    
 def failure_screen(
     title,
     reason,
@@ -215,7 +216,7 @@ def failure_screen(
     try:
         console.clear_live()
 
-    except (AttributeError, LiveError):
+    except (AttributeError, LiveError ,IndexError):
         pass
 
     console.print()

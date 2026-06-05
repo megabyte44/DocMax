@@ -20,6 +20,7 @@ def main_menu():
             "⚡ Batch Processing",
             "👀 Watch Folder",
             "⚙ Settings",
+            "📦 Install Guide",
             "❌ Exit",
         ],
     )
