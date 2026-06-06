@@ -1,7 +1,6 @@
 """
 DocMax CLI - Forge your documents from your terminal.
-
-Entry point for all commands.
+All interactive menus use dict-driven dispatch via the menu module's *_MENU dicts.
 """
 
 from __future__ import annotations
@@ -11,39 +10,85 @@ from typing import List, Optional
 
 import typer
 from rich.console import Console
-from docmax.theme import DocMax_THEME
 from rich.panel import Panel
 from rich.text import Text
-from docmax.setup import setup_dependencies
 
 from docmax import __version__
+from docmax.theme import DocMax_THEME
 from docmax.config import DEFAULT_OCR_LANG, DEFAULT_COMPRESS_PRESET, DEFAULT_BATCH_WORKERS
-from docmax.dependencies import doctor as run_doctor
 from docmax.banner import show_banner
-from docmax.menu import main_menu, pdf_menu ,ocr_menu
-from docmax.watcher import watch
+from docmax.setup import setup_dependencies
+from docmax.dependencies import doctor as run_doctor
 from docmax.help import show_install_help
-from docmax.workflows.merge import merge_workflow
-from docmax.workflows.compress import compress_workflow
-from docmax.workflows.split import split_workflow
-from docmax.workflows.rotate import rotate_workflow
-from docmax.workflows.pages import pages_workflow
-from docmax.workflows.watermark import watermark_workflow
-from docmax.workflows.encrypt import encrypt_workflow
-from docmax.workflows.decrypt import decrypt_workflow
-from docmax.workflows.ocr import ocr_workflow
-from docmax.workflows.searchable import searchable_workflow
-from docmax.workflows.batch_ocr import batch_ocr_workflow
-from docmax.workflows.tables import tables_workflow
-from docmax.workflows.settings import settings_workflow
+from docmax.watcher import watch
 
-from docmax.workflows.extract import extract_workflow
-from docmax.workflows.batch import batch_workflow
-from docmax.workflows.automation import automation_workflow
-from docmax.workflows.image import image_workflow
-from docmax.workflows.convert import conversion_workflow
+# ── Menu functions + dicts ───────────────────────────────────────────────────
+from docmax.menu import (
+    main_menu,
+    pdf_menu,   PDF_MENU,
+    ocr_menu,   OCR_MENU,
+    conversion_menu, CONVERSION_MENU,
+    extract_menu,    EXTRACT_MENU,
+    batch_menu,      BATCH_MENU,
+    image_menu,      IMAGE_MENU,
+    automation_menu, AUTOMATION_MENU,
+    settings_menu,   SETTINGS_MENU,
+)
 
+# ── PDF workflows (all in one file) ─────────────────────────────────────────
+from docmax.workflows.pdf import (
+    merge_workflow,
+    split_workflow,
+    compress_workflow,
+    rotate_workflow,
+    pages_workflow,
+    watermark_workflow,
+    encrypt_workflow,
+    decrypt_workflow,
+)
 
+# ── OCR workflows (all in one file) ─────────────────────────────────────────
+from docmax.workflows.ocr_tools import (
+    ocr_workflow,
+    searchable_workflow,
+    batch_ocr_workflow,
+    tables_workflow,
+    ocr_settings_workflow,
+)
+
+# ── Other workflows ──────────────────────────────────────────────────────────
+from docmax.workflows.convert import (
+    markdown_to_pdf_workflow,
+    markdown_to_docx_workflow,
+    docx_to_pdf_workflow,
+    docx_to_markdown_workflow,
+    images_to_pdf_workflow,
+    pdf_to_images_workflow,
+)
+from docmax.workflows.extract import extract_text_workflow, extract_images_workflow, extract_metadata_workflow
+from docmax.workflows.batch import batch_convert_workflow, batch_compress_workflow, batch_ocr_folder_workflow
+from docmax.workflows.automation import auto_ocr_workflow, auto_searchable_workflow, auto_compress_workflow, auto_preprocess_workflow
+from docmax.workflows.image import (
+    resize_workflow,
+    convert_format_workflow,
+    compress_image_workflow,
+    rotate_image_workflow,
+    crop_workflow,
+    flip_h_workflow,
+    flip_v_workflow,
+    watermark_image_workflow,
+    remove_bg_workflow,
+)
+from docmax.workflows.settings import (
+    ocr_settings_workflow as settings_ocr_workflow,
+    doctor_workflow,
+    setup_workflow,
+    show_paths_workflow,
+)
+
+# ---------------------------------------------------------------------------
+# App
+# ---------------------------------------------------------------------------
 
 app = typer.Typer(
     name="DocMax",
@@ -52,7 +97,7 @@ app = typer.Typer(
     rich_markup_mode="rich",
     no_args_is_help=False,
 )
-    
+
 console = Console(theme=DocMax_THEME)
 
 
@@ -68,13 +113,111 @@ def _version_callback(value: bool):
         raise typer.Exit()
 
 
+# ---------------------------------------------------------------------------
+# Action maps  (action_key → callable)
+# These mirror the values in the *_MENU dicts.
+# ---------------------------------------------------------------------------
+
+PDF_ACTIONS = {
+    "merge":    merge_workflow,
+    "split":    split_workflow,
+    "compress": compress_workflow,
+    "rotate":   rotate_workflow,
+    "pages":    pages_workflow,
+    "watermark": watermark_workflow,
+    "encrypt":  encrypt_workflow,
+    "decrypt":  decrypt_workflow,
+}
+
+OCR_ACTIONS = {
+    "ocr":        ocr_workflow,
+    "searchable": searchable_workflow,
+    "batch_ocr":  batch_ocr_workflow,
+    "tables":     tables_workflow,
+    "settings":   ocr_settings_workflow,
+}
+
+CONVERSION_ACTIONS = {
+    "md2pdf":   markdown_to_pdf_workflow,
+    "md2docx":  markdown_to_docx_workflow,
+    "docx2pdf": docx_to_pdf_workflow,
+    "docx2md":  docx_to_markdown_workflow,
+    "img2pdf":  images_to_pdf_workflow,
+    "pdf2img":  pdf_to_images_workflow,
+}
+
+EXTRACT_ACTIONS = {
+    "text":     extract_text_workflow,
+    "images":   extract_images_workflow,
+    "metadata": extract_metadata_workflow,
+}
+
+BATCH_ACTIONS = {
+    "convert":  batch_convert_workflow,
+    "compress": batch_compress_workflow,
+    "ocr":      batch_ocr_folder_workflow,
+}
+
+IMAGE_ACTIONS = {
+    "resize":    resize_workflow,
+    "convert":   convert_format_workflow,
+    "compress":  compress_image_workflow,
+    "rotate":    rotate_image_workflow,
+    "crop":      crop_workflow,
+    "flip_h":    flip_h_workflow,
+    "flip_v":    flip_v_workflow,
+    "watermark": watermark_image_workflow,
+    "remove_bg": remove_bg_workflow,
+}
+
+AUTOMATION_ACTIONS = {
+    "ocr":        auto_ocr_workflow,
+    "searchable": auto_searchable_workflow,
+    "compress":   auto_compress_workflow,
+    "preprocess": auto_preprocess_workflow,
+}
+
+SETTINGS_ACTIONS = {
+    "ocr_settings": settings_ocr_workflow,
+    "doctor":        doctor_workflow,
+    "setup":         setup_workflow,
+    "paths":         show_paths_workflow,
+}
+
+
+# ---------------------------------------------------------------------------
+# Generic submenu runner
+# ---------------------------------------------------------------------------
+
+def _run_submenu(menu_fn, menu_dict: dict, action_map: dict):
+    """
+    Loop a submenu until Back is chosen.
+
+    menu_fn()    → returns the display string the user picked
+    menu_dict    → maps display string → action key (None = Back)
+    action_map   → maps action key → callable
+    """
+    while True:
+        choice = menu_fn()
+        action_key = menu_dict.get(choice)
+        if action_key is None:          # "⬅ Back" or unknown
+            break
+        action = action_map.get(action_key)
+        if action:
+            action()
+        else:
+            console.print(f"[yellow]{choice} not implemented yet[/yellow]")
+
+
+# ---------------------------------------------------------------------------
+# Main interactive entry point
+# ---------------------------------------------------------------------------
+
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
     version: Optional[bool] = typer.Option(
-        None,
-        "--version",
-        "-v",
+        None, "--version", "-v",
         callback=_version_callback,
         is_eager=True,
         help="Show DocMax version.",
@@ -84,95 +227,47 @@ def main(
         return
 
     show_banner()
+
     try:
         while True:
             choice = main_menu()
 
-            if choice == "❌ Exit":
+            if choice is None or choice == "❌ Exit":
                 raise typer.Exit()
 
-            if choice == "📄 PDF Tools":
+            elif choice == "📄 PDF Tools":
+                _run_submenu(pdf_menu, PDF_MENU, PDF_ACTIONS)
 
-                while True:
-                    pdf_choice = pdf_menu()
-
-                    if pdf_choice == "⬅ Back":
-                        break
-
-                    if pdf_choice == "Merge PDFs":
-                        merge_workflow()
-                    elif pdf_choice == "Compress PDF":
-                        compress_workflow()
-                    elif pdf_choice == "Split PDF":
-                        split_workflow()
-                    elif pdf_choice == "Rotate PDF":
-                        rotate_workflow()
-                    elif pdf_choice == "Extract Pages":
-                        pages_workflow()
-                    elif pdf_choice == "Watermark PDF":
-                        watermark_workflow()
-
-                    elif pdf_choice == "Encrypt PDF":
-                        encrypt_workflow()
-
-                    elif pdf_choice == "Decrypt PDF":
-                        decrypt_workflow()
-                        
-                    else:
-                        console.print(
-                            f"[yellow]{pdf_choice} workflow not implemented yet[/yellow]"
-                        )
             elif choice == "🔍 OCR":
+                _run_submenu(ocr_menu, OCR_MENU, OCR_ACTIONS)
 
-                while True:
-
-                    ocr_choice = ocr_menu()
-
-                    if ocr_choice == "⬅ Back":
-                        break
-
-                    elif ocr_choice == "OCR Image/PDF":
-                        ocr_workflow()
-
-                    elif ocr_choice == "Searchable PDF":
-                        searchable_workflow()
-
-                    elif ocr_choice == "Batch OCR":
-                        batch_ocr_workflow()
-
-                    elif ocr_choice == "Extract Tables":
-                        tables_workflow()
-
-                    elif ocr_choice == "OCR Settings":
-                        settings_workflow()
-                    else:
-                        console.print(
-                            f"[yellow]{choice} not implemented yet[/yellow]"
-                        )
             elif choice == "🔄 Conversion":
-                conversion_workflow()
-            
+                _run_submenu(conversion_menu, CONVERSION_MENU, CONVERSION_ACTIONS)
+
             elif choice == "📂 Extract":
-                extract_workflow()
+                _run_submenu(extract_menu, EXTRACT_MENU, EXTRACT_ACTIONS)
 
             elif choice == "⚡ Batch Processing":
-                batch_workflow()
-
-            elif choice == "👀 Watch Folder":
-                automation_workflow()
+                _run_submenu(batch_menu, BATCH_MENU, BATCH_ACTIONS)
 
             elif choice == "🖼 Image Processing":
-                image_workflow()
+                _run_submenu(image_menu, IMAGE_MENU, IMAGE_ACTIONS)
+
+            elif choice == "👀 Watch Folder":
+                _run_submenu(automation_menu, AUTOMATION_MENU, AUTOMATION_ACTIONS)
+
             elif choice == "⚙ Settings":
-                settings_workflow()
+                _run_submenu(settings_menu, SETTINGS_MENU, SETTINGS_ACTIONS)
+
             elif choice == "📦 Install Guide":
                 show_install_help()
+
     except KeyboardInterrupt:
         console.print("\n[red]Exiting...[/red]")
-        return
+
 
 # ===========================================================================
-# HELPER Commands
+# Helper Commands
 # ===========================================================================
 
 @app.command("doctor")
@@ -180,14 +275,16 @@ def cmd_doctor():
     """Check external dependencies."""
     run_doctor()
 
+
 @app.command("setup")
 def cmd_setup():
     """Install external dependencies."""
     setup_dependencies()
+
+
 # ===========================================================================
 # PDF Commands
 # ===========================================================================
-
 
 @app.command("merge")
 def cmd_merge(
@@ -206,7 +303,7 @@ def cmd_merge(
 @app.command("split")
 def cmd_split(
     input_file: Path = typer.Argument(..., help="PDF file to split."),
-    output_dir: Optional[Path] = typer.Option(None, "-o", "--output-dir", help="Directory for output pages."),
+    output_dir: Optional[Path] = typer.Option(None, "-o", "--output-dir"),
 ):
     """[bold]Split[/bold] a PDF into individual page files."""
     from docmax.operations import split
@@ -216,8 +313,8 @@ def cmd_split(
 @app.command("compress")
 def cmd_compress(
     input_file: Path = typer.Argument(..., help="PDF file to compress."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
-    preset: str = typer.Option(DEFAULT_COMPRESS_PRESET, "--preset", help="Ghostscript preset: screen|ebook|printer|prepress|default."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
+    preset: str = typer.Option(DEFAULT_COMPRESS_PRESET, "--preset"),
 ):
     """[bold]Compress[/bold] a PDF using Ghostscript."""
     from docmax.operations import compress
@@ -227,8 +324,8 @@ def cmd_compress(
 @app.command("rotate")
 def cmd_rotate(
     input_file: Path = typer.Argument(..., help="PDF file to rotate."),
-    degrees: int = typer.Argument(..., help="Degrees to rotate: 90, 180, or 270."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
+    degrees: int = typer.Argument(..., help="Degrees: 90, 180, or 270."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Rotate[/bold] all pages of a PDF."""
     from docmax.operations import rotate
@@ -238,8 +335,8 @@ def cmd_rotate(
 @app.command("pages")
 def cmd_pages(
     input_file: Path = typer.Argument(..., help="PDF file."),
-    page_range: str = typer.Argument(..., help='Page range, e.g. "1-5", "3", or "1,3,5".'),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
+    page_range: str = typer.Argument(..., help='Page range e.g. "1-5", "3", "1,3,5".'),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Extract[/bold] a range of pages from a PDF."""
     from docmax.operations import extract_pages
@@ -250,7 +347,7 @@ def cmd_pages(
 def cmd_watermark(
     input_file: Path = typer.Argument(..., help="PDF file to watermark."),
     watermark_file: Path = typer.Argument(..., help="Watermark file (PDF or image)."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Watermark[/bold] a PDF with an image or PDF overlay."""
     from docmax.operations import watermark
@@ -260,8 +357,8 @@ def cmd_watermark(
 @app.command("encrypt")
 def cmd_encrypt(
     input_file: Path = typer.Argument(..., help="PDF file to encrypt."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
-    password: str = typer.Option(..., prompt=True, hide_input=True, confirmation_prompt=True, help="Password."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
+    password: str = typer.Option(..., prompt=True, hide_input=True, confirmation_prompt=True),
 ):
     """[bold]Encrypt[/bold] a PDF with a password."""
     from docmax.operations import encrypt
@@ -271,8 +368,8 @@ def cmd_encrypt(
 @app.command("decrypt")
 def cmd_decrypt(
     input_file: Path = typer.Argument(..., help="Encrypted PDF file."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
-    password: str = typer.Option(..., prompt=True, hide_input=True, help="Password."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
+    password: str = typer.Option(..., prompt=True, hide_input=True),
 ):
     """[bold]Decrypt[/bold] a password-protected PDF."""
     from docmax.operations import decrypt
@@ -285,14 +382,13 @@ def cmd_decrypt(
 
 @app.command("ocr")
 def cmd_ocr(
-    input_file: Path = typer.Argument(..., help="Image or PDF file to run OCR on."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
-    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang", help='Tesseract language(s), e.g. "eng" or "eng+hin".'),
-    fmt: str = typer.Option("txt", "--fmt", help="Output format: txt | json | md."),
+    input_file: Path = typer.Argument(..., help="Image or PDF file."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
+    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang"),
+    fmt: str = typer.Option("txt", "--fmt", help="txt | json | md"),
 ):
     """[bold]Run OCR[/bold] on an image or PDF file."""
-    suffix = input_file.suffix.lower()
-    if suffix == ".pdf":
+    if input_file.suffix.lower() == ".pdf":
         from docmax.engine import ocr_pdf
         ocr_pdf(input_file, output, lang, fmt)
     else:
@@ -303,9 +399,9 @@ def cmd_ocr(
 @app.command("searchable")
 def cmd_searchable(
     input_file: Path = typer.Argument(..., help="Scanned PDF to make searchable."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
-    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang", help="Tesseract language(s)."),
-    dpi: int = typer.Option(300, "--dpi", help="DPI for page rendering."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
+    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang"),
+    dpi: int = typer.Option(300, "--dpi"),
 ):
     """[bold]Create a searchable PDF[/bold] from a scanned PDF."""
     from docmax.engine import make_searchable_pdf
@@ -314,11 +410,11 @@ def cmd_searchable(
 
 @app.command("batch-ocr")
 def cmd_batch_ocr(
-    directory: Path = typer.Argument(..., help="Directory to scan for files."),
-    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang", help="Tesseract language(s)."),
-    fmt: str = typer.Option("txt", "--fmt", help="Output format: txt | json | md."),
-    workers: int = typer.Option(DEFAULT_BATCH_WORKERS, "--workers", help="Number of parallel workers."),
-    no_recursive: bool = typer.Option(False, "--no-recursive", help="Disable recursive directory scan."),
+    directory: Path = typer.Argument(..., help="Directory to scan."),
+    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang"),
+    fmt: str = typer.Option("txt", "--fmt"),
+    workers: int = typer.Option(DEFAULT_BATCH_WORKERS, "--workers"),
+    no_recursive: bool = typer.Option(False, "--no-recursive"),
 ):
     """[bold]Batch OCR[/bold] all images and PDFs in a directory."""
     from docmax.batch import batch_with_ocr
@@ -332,8 +428,8 @@ def cmd_batch_ocr(
 @app.command("convert")
 def cmd_convert(
     input_file: Path = typer.Argument(..., help="Input document."),
-    target_format: str = typer.Argument(..., help="Target format: pdf | docx | md | html | txt | rst | odt | epub."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
+    target_format: str = typer.Argument(..., help="pdf | docx | md | html | txt | rst | odt | epub"),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Convert[/bold] a document to another format using Pandoc."""
     from docmax.converter import convert
@@ -343,7 +439,7 @@ def cmd_convert(
 @app.command("img2pdf")
 def cmd_img2pdf(
     source: Path = typer.Argument(..., help="Image file or directory of images."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output PDF path."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Combine images[/bold] into a single PDF."""
     from docmax.converter import images_to_pdf
@@ -353,9 +449,9 @@ def cmd_img2pdf(
 @app.command("pdf2img")
 def cmd_pdf2img(
     input_file: Path = typer.Argument(..., help="PDF file to convert."),
-    output_dir: Optional[Path] = typer.Option(None, "-o", "--output-dir", help="Output directory."),
-    dpi: int = typer.Option(200, "--dpi", help="Image DPI."),
-    fmt: str = typer.Option("png", "--fmt", help="Image format: png | jpeg | tiff."),
+    output_dir: Optional[Path] = typer.Option(None, "-o", "--output-dir"),
+    dpi: int = typer.Option(200, "--dpi"),
+    fmt: str = typer.Option("png", "--fmt", help="png | jpeg | tiff"),
 ):
     """[bold]Convert PDF pages[/bold] to image files."""
     from docmax.converter import pdf_to_images
@@ -369,7 +465,7 @@ def cmd_pdf2img(
 @app.command("text")
 def cmd_text(
     input_file: Path = typer.Argument(..., help="PDF file."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output .txt file path."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Extract text[/bold] from a PDF."""
     from docmax.extractor import extract_text
@@ -379,7 +475,7 @@ def cmd_text(
 @app.command("images")
 def cmd_images(
     input_file: Path = typer.Argument(..., help="PDF file."),
-    output_dir: Optional[Path] = typer.Option(None, "-o", "--output-dir", help="Output directory."),
+    output_dir: Optional[Path] = typer.Option(None, "-o", "--output-dir"),
 ):
     """[bold]Extract embedded images[/bold] from a PDF."""
     from docmax.extractor import extract_images
@@ -389,7 +485,7 @@ def cmd_images(
 @app.command("metadata")
 def cmd_metadata(
     input_file: Path = typer.Argument(..., help="PDF file."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Save metadata to JSON file."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Display metadata[/bold] from a PDF."""
     from docmax.extractor import extract_metadata
@@ -399,8 +495,8 @@ def cmd_metadata(
 @app.command("tables")
 def cmd_tables(
     input_file: Path = typer.Argument(..., help="PDF file."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file or directory."),
-    fmt: str = typer.Option("csv", "--fmt", help="Export format: csv | xlsx | json."),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
+    fmt: str = typer.Option("csv", "--fmt", help="csv | xlsx | json"),
 ):
     """[bold]Extract tables[/bold] from a PDF."""
     from docmax.extractor import extract_tables
@@ -413,8 +509,8 @@ def cmd_tables(
 
 @app.command("enhance")
 def cmd_enhance(
-    input_file: Path = typer.Argument(..., help="Image file to enhance."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
+    input_file: Path = typer.Argument(...),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Enhance[/bold] image contrast, brightness, and sharpness."""
     from docmax.processor import enhance
@@ -423,8 +519,8 @@ def cmd_enhance(
 
 @app.command("deskew")
 def cmd_deskew(
-    input_file: Path = typer.Argument(..., help="Image file to deskew."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
+    input_file: Path = typer.Argument(...),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Correct the skew angle[/bold] of a scanned image."""
     from docmax.processor import deskew
@@ -433,8 +529,8 @@ def cmd_deskew(
 
 @app.command("denoise")
 def cmd_denoise(
-    input_file: Path = typer.Argument(..., help="Image file to denoise."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
+    input_file: Path = typer.Argument(...),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
     """[bold]Remove noise[/bold] from an image."""
     from docmax.processor import denoise
@@ -443,11 +539,11 @@ def cmd_denoise(
 
 @app.command("resize")
 def cmd_resize(
-    input_file: Path = typer.Argument(..., help="Image file to resize."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
-    width: Optional[int] = typer.Option(None, "--width", help="Target width in pixels."),
-    height: Optional[int] = typer.Option(None, "--height", help="Target height in pixels."),
-    scale: Optional[float] = typer.Option(None, "--scale", help="Scale factor, e.g. 0.5 for 50%."),
+    input_file: Path = typer.Argument(...),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
+    width: Optional[int] = typer.Option(None, "--width"),
+    height: Optional[int] = typer.Option(None, "--height"),
+    scale: Optional[float] = typer.Option(None, "--scale"),
 ):
     """[bold]Resize[/bold] an image by width, height, or scale factor."""
     from docmax.processor import resize
@@ -456,32 +552,31 @@ def cmd_resize(
 
 @app.command("preprocess")
 def cmd_preprocess(
-    input_file: Path = typer.Argument(..., help="Image to preprocess for OCR."),
-    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output file path."),
+    input_file: Path = typer.Argument(...),
+    output: Optional[Path] = typer.Option(None, "-o", "--output"),
 ):
-    """[bold]OCR preprocessing pipeline[/bold]: orientation -> contrast -> denoise -> binarize."""
+    """[bold]OCR preprocessing pipeline[/bold]: orientation → contrast → denoise → binarize."""
     from docmax.processor import preprocess_for_ocr
     preprocess_for_ocr(input_file, output)
 
 
 # ===========================================================================
-# Batch Processing Command
+# Batch Command
 # ===========================================================================
 
 @app.command("batch")
 def cmd_batch(
-    directory: Path = typer.Argument(..., help="Directory to batch process."),
-    ocr: bool = typer.Option(False, "--ocr", help="Run OCR on all images/PDFs."),
-    compress: bool = typer.Option(False, "--compress", help="Compress all PDFs."),
-    convert_to: Optional[str] = typer.Option(None, "--convert", help="Convert all documents to this format."),
-    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang", help="OCR language(s)."),
-    fmt: str = typer.Option("txt", "--fmt", help="OCR output format: txt | json | md."),
-    workers: int = typer.Option(DEFAULT_BATCH_WORKERS, "--workers", help="Parallel workers."),
-    no_recursive: bool = typer.Option(False, "--no-recursive", help="Disable recursive scan."),
+    directory: Path = typer.Argument(...),
+    ocr: bool = typer.Option(False, "--ocr"),
+    compress: bool = typer.Option(False, "--compress"),
+    convert_to: Optional[str] = typer.Option(None, "--convert"),
+    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang"),
+    fmt: str = typer.Option("txt", "--fmt"),
+    workers: int = typer.Option(DEFAULT_BATCH_WORKERS, "--workers"),
+    no_recursive: bool = typer.Option(False, "--no-recursive"),
 ):
     """[bold]Batch process[/bold] a directory of files."""
     from docmax.batch import batch_with_ocr, batch_compress, batch_convert
-
     if ocr:
         batch_with_ocr(directory, lang, fmt, not no_recursive, workers)
     elif compress:
@@ -499,17 +594,15 @@ def cmd_batch(
 
 @app.command("watch")
 def cmd_watch(
-    directory: Path = typer.Argument(..., help="Directory to monitor."),
-    ocr: bool = typer.Option(False, "--ocr", help="Run OCR on new files."),
-    searchable: bool = typer.Option(False, "--searchable", help="Make new PDFs searchable."),
-    compress: bool = typer.Option(False, "--compress", help="Compress new PDFs."),
-    preprocess: bool = typer.Option(False, "--preprocess", help="Preprocess new images for OCR."),
-    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang", help="OCR language(s)."),
-    fmt: str = typer.Option("txt", "--fmt", help="OCR output format."),
+    directory: Path = typer.Argument(...),
+    ocr: bool = typer.Option(False, "--ocr"),
+    searchable: bool = typer.Option(False, "--searchable"),
+    compress: bool = typer.Option(False, "--compress"),
+    preprocess: bool = typer.Option(False, "--preprocess"),
+    lang: str = typer.Option(DEFAULT_OCR_LANG, "--lang"),
+    fmt: str = typer.Option("txt", "--fmt"),
 ):
     """[bold]Watch[/bold] a directory and auto-process new files."""
-
-
     if ocr:
         action = "ocr"
     elif searchable:
@@ -519,9 +612,8 @@ def cmd_watch(
     elif preprocess:
         action = "preprocess"
     else:
-        console.print("[yellow]Specify an action: --ocr, --searchable, --compress, or --preprocess[/yellow]")
+        console.print("[yellow]Specify: --ocr, --searchable, --compress, or --preprocess[/yellow]")
         raise typer.Exit(1)
-
     watch(directory, action, lang, fmt)
 
 
