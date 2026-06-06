@@ -1,80 +1,67 @@
-from pathlib import Path
-
 import questionary
 
 from docmax.batch import (
     batch_convert,
     batch_compress,
-    batch_with_ocr
+    batch_with_ocr,
 )
 
-from docmax.menu import batch_menu
 from docmax.workflows.common import select_folder
 
 
-def batch_workflow():
+def batch_convert_workflow():
+    folder = select_folder()
 
-    while True:
+    if not folder:
+        return
 
-        choice = batch_menu()
+    target = questionary.select(
+        "Convert documents to:",
+        choices=[
+            "pdf",
+            "docx",
+            "md",
+        ],
+    ).ask()
 
-        if choice == "Batch Convert":
+    batch_convert(
+        folder,
+        target,
+    )
 
-            folder = select_folder()
 
-            if not folder:
-                continue
+def batch_compress_workflow():
+    folder = select_folder()
 
-            target = questionary.select(
-                "Convert documents to:",
-                choices=[
-                    "pdf",
-                    "docx",
-                    "md",
-                ],
-            ).ask()
+    if not folder:
+        return
 
-            batch_convert(
-                folder,
-                target,
-            )
+    batch_compress(
+        folder,
+    )
 
-        elif choice == "Batch Compress":
 
-            folder = select_folder()
+def batch_ocr_folder_workflow():
+    folder = select_folder()
 
-            if not folder:
-                continue
+    if not folder:
+        return
 
-            batch_compress(
-                folder,
-            )
+    lang = questionary.text(
+        "OCR language:",
+        default="eng",
+    ).ask()
 
-        elif choice == "Batch OCR":
+    fmt = questionary.select(
+        "Output format:",
+        choices=[
+            "txt",
+            "pdf",
+        ],
+    ).ask()
 
-            folder = select_folder()
-
-            if not folder:
-                continue
-
-            lang = questionary.text(
-                "OCR language:",
-                default="eng",
-            ).ask()
-
-            fmt = questionary.select(
-                "Output format:",
-                choices=[
-                    "txt",
-                    "pdf",
-                ],
-            ).ask()
-
-            batch_with_ocr(
-                folder,
-                lang,
-                fmt,
-            )
-
-        elif choice == "⬅ Back":
-            break
+    batch_with_ocr(
+        folder,
+        lang,
+        fmt,
+    )

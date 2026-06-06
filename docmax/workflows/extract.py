@@ -1,7 +1,5 @@
-from docmax.menu import extract_menu
 from pathlib import Path
 
-from docmax.menu import extract_menu
 from docmax.extractor import (
     extract_text,
     extract_images,
@@ -12,113 +10,86 @@ from docmax.workflows.common import (
     select_single_pdf,
     get_output_name,
     success_screen,
-    failure_screen
 )
-def extract_workflow():
 
-    while True:
-        try:
-            choice = extract_menu()
 
-            # ==================================================
-            # Extract Text
-            # ==================================================
+def extract_text_workflow():
+    input_file = select_single_pdf()
 
-            if choice == "Extract Text":
+    if not input_file:
+        return
 
-                input_file = select_single_pdf()
+    output = get_output_name(
+        f"{input_file.stem}.txt"
+    )
 
-                if not input_file:
-                    continue
+    if not output:
+        return
 
-                output = get_output_name(
-                    f"{input_file.stem}.txt"
-                )
+    output_path = Path(output)
 
-                if not output:
-                    continue
+    extract_text(
+        input_file,
+        output_path,
+    )
 
-                output_path = Path(output)
+    success_screen(
+        "Text Extracted",
+        output_file=output_path.name,
+        extra_lines=[
+            f"Location : {output_path.resolve()}"
+        ]
+    )
 
-                extract_text(
-                    input_file,
-                    output_path,
-                )
 
-                success_screen(
-                    "Text Extracted",
-                    output_file=output_path.name,
-                    extra_lines=[
-                        f"Location : {output_path.resolve()}"
-                    ]
-                )
+def extract_images_workflow():
+    input_file = select_single_pdf()
 
-            # ==================================================
-            # Extract Images
-            # ==================================================
+    if not input_file:
+        return
 
-            elif choice == "Extract Images":
+    output_dir = (
+        input_file.parent
+        / f"{input_file.stem}_images"
+    )
 
-                input_file = select_single_pdf()
+    extract_images(
+        input_file,
+        output_dir,
+    )
 
-                if not input_file:
-                    continue
+    success_screen(
+        "Images Extracted",
+        extra_lines=[
+            f"Folder : {output_dir.resolve()}"
+        ]
+    )
 
-                output_dir = (
-                    input_file.parent
-                    / f"{input_file.stem}_images"
-                )
 
-                extract_images(
-                    input_file,
-                    output_dir,
-                )
+def extract_metadata_workflow():
+    input_file = select_single_pdf()
 
-                success_screen(
-                    "Images Extracted",
-                    extra_lines=[
-                        f"Folder : {output_dir.resolve()}"
-                    ]
-                )
+    if not input_file:
+        return
 
-            # ==================================================
-            # Extract Metadata
-            # ==================================================
+    output = get_output_name(
+        f"{input_file.stem}_metadata.json"
+    )
 
-            elif choice == "Extract Metadata":
+    if not output:
+        return
 
-                input_file = select_single_pdf()
+    output_path = Path(output)
 
-                if not input_file:
-                    continue
+    extract_metadata(
+        input_file,
+        output_path,
+    )
 
-                output = get_output_name(
-                    f"{input_file.stem}_metadata.json"
-                )
-
-                if not output:
-                    continue
-
-                output_path = Path(output)
-
-                extract_metadata(
-                    input_file,
-                    output_path,
-                )
-
-                success_screen(
-                    "Metadata Extracted",
-                    output_file=output_path.name,
-                    extra_lines=[
-                        f"Location : {output_path.resolve()}"
-                    ]
-                )
-
-            # ==================================================
-            # Back
-            # ==================================================
-
-            elif choice == "⬅ Back":
-                break
-        except Exception as e:
-            failure_screen("Extraction Failed", str(e))
+    success_screen(
+        "Metadata Extracted",
+        output_file=output_path.name,
+        extra_lines=[
+            f"Location : {output_path.resolve()}"
+        ]
+    )

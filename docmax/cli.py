@@ -80,7 +80,7 @@ from docmax.workflows.image import (
     remove_bg_workflow,
 )
 from docmax.workflows.settings import (
-    ocr_settings_workflow as settings_ocr_workflow,
+    settings_ocr_workflow,
     doctor_workflow,
     setup_workflow,
     show_paths_workflow,

@@ -2,92 +2,81 @@ from pathlib import Path
 
 import questionary
 
-from docmax.menu import automation_menu
 from docmax.watcher import watch
 
 
-def automation_workflow():
+def auto_ocr_workflow():
+    folder = questionary.path(
+        "Folder to watch:"
+    ).ask()
 
-    while True:
+    if not folder:
+        return
 
-        choice = automation_menu()
+    fmt = questionary.select(
+        "Output format:",
+        choices=[
+            "txt",
+            "pdf"
+        ]
+    ).ask()
 
-        if choice == "Auto OCR":
+    lang = questionary.text(
+        "OCR language:",
+        default="eng"
+    ).ask()
 
-            folder = questionary.path(
-                "Folder to watch:"
-            ).ask()
+    watch(
+        Path(folder),
+        action="ocr",
+        lang=lang,
+        fmt=fmt
+    )
 
-            if not folder:
-                continue
 
-            fmt = questionary.select(
-                "Output format:",
-                choices=[
-                    "txt",
-                    "pdf"
-                ]
-            ).ask()
+def auto_searchable_workflow():
+    folder = questionary.path(
+        "Folder to watch:"
+    ).ask()
 
-            lang = questionary.text(
-                "OCR language:",
-                default="eng"
-            ).ask()
+    if not folder:
+        return
 
-            watch(
-                Path(folder),
-                action="ocr",
-                lang=lang,
-                fmt=fmt
-            )
+    lang = questionary.text(
+        "OCR language:",
+        default="eng"
+    ).ask()
 
-        elif choice == "Auto Searchable PDF":
+    watch(
+        Path(folder),
+        action="searchable",
+        lang=lang
+    )
 
-            folder = questionary.path(
-                "Folder to watch:"
-            ).ask()
 
-            if not folder:
-                continue
+def auto_compress_workflow():
+    folder = questionary.path(
+        "Folder to watch:"
+    ).ask()
 
-            lang = questionary.text(
-                "OCR language:",
-                default="eng"
-            ).ask()
+    if not folder:
+        return
 
-            watch(
-                Path(folder),
-                action="searchable",
-                lang=lang
-            )
+    watch(
+        Path(folder),
+        action="compress"
+    )
 
-        elif choice == "Auto Compress PDF":
 
-            folder = questionary.path(
-                "Folder to watch:"
-            ).ask()
+def auto_preprocess_workflow():
+    folder = questionary.path(
+        "Folder to watch:"
+    ).ask()
 
-            if not folder:
-                continue
+    if not folder:
+        return
 
-            watch(
-                Path(folder),
-                action="compress"
-            )
-
-        elif choice == "Auto Preprocess Images":
-
-            folder = questionary.path(
-                "Folder to watch:"
-            ).ask()
-
-            if not folder:
-                continue
-
-            watch(
-                Path(folder),
-                action="preprocess"
-            )
-
-        elif choice == "⬅ Back":
-            break
+    watch(
+        Path(folder),
+        action="preprocess"
+    )
