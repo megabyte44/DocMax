@@ -1,3 +1,12 @@
+"""
+DocMax Config Manager — single source of truth.
+
+All persistent state lives in ~/.docmax/config.json.
+(Previously split between cwd/.docmax.json and ~/.docmax/config.json — now unified.)
+"""
+
+from __future__ import annotations
+
 import json
 from pathlib import Path
 
@@ -5,29 +14,61 @@ CONFIG_DIR = Path.home() / ".docmax"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
 
-def load_config():
+# ---------------------------------------------------------------------------
+# Core read / write
+# ---------------------------------------------------------------------------
+
+def load_config() -> dict:
     if not CONFIG_FILE.exists():
         return {}
-
     try:
-        with open(CONFIG_FILE, "r") as f:
-            return json.load(f)
+        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
     except Exception:
         return {}
 
 
-def save_config(config: dict):
-    CONFIG_DIR.mkdir(exist_ok=True)
-
-    with open(CONFIG_FILE, "w") as f:
-        json.dump(config, f, indent=4)
+def save_config(config: dict) -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    CONFIG_FILE.write_text(json.dumps(config, indent=4), encoding="utf-8")
 
 
-def get_tool_path(tool: str):
-    return load_config().get(tool)
+# ---------------------------------------------------------------------------
+# Tool paths
+# ---------------------------------------------------------------------------
+
+def get_tool_path(tool: str) -> str | None:
+    return load_config().get(f"tool_{tool}")
 
 
-def set_tool_path(tool: str, path: str):
+def set_tool_path(tool: str, path: str) -> None:
     config = load_config()
-    config[tool] = path
+    config[f"tool_{tool}"] = path
+    save_config(config)
+
+
+# ---------------------------------------------------------------------------
+# Recent folder  (was in utils.py / cwd — now here)
+# ---------------------------------------------------------------------------
+
+def save_recent_folder(folder: str) -> None:
+    config = load_config()
+    config["recent_folder"] = folder
+    save_config(config)
+
+
+def load_recent_folder() -> str | None:
+    return load_config().get("recent_folder")
+
+
+# ---------------------------------------------------------------------------
+# OCR / other user preferences
+# ---------------------------------------------------------------------------
+
+def get_preference(key: str, default=None):
+    return load_config().get(f"pref_{key}", default)
+
+
+def set_preference(key: str, value) -> None:
+    config = load_config()
+    config[f"pref_{key}"] = value
     save_config(config)

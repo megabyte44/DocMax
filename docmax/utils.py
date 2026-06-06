@@ -1,9 +1,12 @@
 """
-DocMax Utilities - Shared helpers used across all modules.
+DocMax Utilities — shared helpers used across all modules.
+
+Config is now fully in config_manager.py (single source of truth).
+recent_folder is saved/loaded via config_manager, not a local .docmax.json.
 """
 
 from __future__ import annotations
-import json
+
 import shutil
 import sys
 from pathlib import Path
@@ -11,39 +14,24 @@ from typing import List, Optional
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.text import Text
 
 console = Console()
 
 
+# ---------------------------------------------------------------------------
+# Recent folder — delegate to config_manager (no more cwd/.docmax.json)
+# ---------------------------------------------------------------------------
+
+def save_recent_folder(folder: str) -> None:
+    from docmax.config_manager import save_recent_folder as _save
+    _save(folder)
 
 
-CONFIG_FILE = Path.cwd() / ".docmax.json"
+def load_recent_folder() -> Optional[str]:
+    from docmax.config_manager import load_recent_folder as _load
+    return _load()
 
 
-def save_recent_folder(folder: str):
-    try:
-        data = {"recent_folder": folder}
-
-        CONFIG_FILE.write_text(
-            json.dumps(data, indent=4)
-        )
-
-
-    except Exception as e:
-        print("ERROR:", e)
-
-
-def load_recent_folder():
-    if not CONFIG_FILE.exists():
-        return None
-
-    try:
-        return json.loads(
-            CONFIG_FILE.read_text()
-        ).get("recent_folder")
-    except Exception:
-        return None
 # ---------------------------------------------------------------------------
 # Output path helpers
 # ---------------------------------------------------------------------------
@@ -54,16 +42,6 @@ def resolve_output(
     suffix: str,
     ext: Optional[str] = None,
 ) -> Path:
-    """
-    Resolve where to write the output file.
-
-    If `output` is given -> use it.
-    Otherwise derive a name from the input path + suffix + optional new extension.
-
-    Example:
-        resolve_output(Path("doc.pdf"), None, "_merged", ".pdf")
-        -> Path("doc_merged.pdf")
-    """
     if output:
         return Path(output)
     src = Path(input_path)
@@ -72,7 +50,6 @@ def resolve_output(
 
 
 def ensure_parent(path: Path) -> None:
-    """Create parent directories for path if they don't exist."""
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
@@ -81,50 +58,65 @@ def ensure_parent(path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def require_tool(tool: str, install_hint: str = "") -> None:
-    """Abort with a helpful message if an external tool is not on PATH."""
+    """Abort with a helpful message if an external tool is not found."""
+    # First check saved config path
+    from docmax.config_manager import get_tool_path
+    saved = get_tool_path(tool)
+    if saved and Path(saved).exists():
+        return  # found via saved config
+
     if shutil.which(tool) is None:
         msg = f"[bold red]Missing dependency:[/bold red] '{tool}' was not found on PATH."
         if install_hint:
             msg += f"\n[dim]{install_hint}[/dim]"
+        msg += "\n\nRun [bold cyan]docmax setup[/bold cyan] to install it automatically."
         console.print(Panel(msg, title="[red]Dependency Error[/red]", border_style="red"))
         sys.exit(1)
 
 
 def require_tesseract() -> None:
-    require_tool(
-        "tesseract",
-        "Install Tesseract: https://tesseract-ocr.github.io/tessdoc/Installation.html",
-    )
+    from docmax.dependencies import has_tesseract
+    if not has_tesseract():
+        console.print(Panel(
+            "[bold red]Missing dependency:[/bold red] Tesseract OCR not found.\n"
+            "[dim]Run: [bold cyan]docmax setup[/bold cyan][/dim]",
+            title="[red]Dependency Error[/red]", border_style="red",
+        ))
+        sys.exit(1)
 
 
 def require_ghostscript() -> None:
-    for candidate in ("gs", "gswin64c", "gswin32c"):
-        if shutil.which(candidate):
-            return
-    console.print(
-        Panel(
-            "[bold red]Missing dependency:[/bold red] 'Ghostscript' was not found on PATH.\n"
-            "[dim]Install from https://ghostscript.com/releases/gsdnld.html[/dim]",
-            title="[red]Dependency Error[/red]",
-            border_style="red",
-        )
-    )
-    sys.exit(1)
+    from docmax.dependencies import has_ghostscript
+    if not has_ghostscript():
+        console.print(Panel(
+            "[bold red]Missing dependency:[/bold red] Ghostscript not found.\n"
+            "[dim]Run: [bold cyan]docmax setup[/bold cyan][/dim]",
+            title="[red]Dependency Error[/red]", border_style="red",
+        ))
+        sys.exit(1)
 
 
 def require_pandoc() -> None:
-    require_tool(
-        "pandoc",
-        "Install Pandoc: https://pandoc.org/installing.html",
-    )
+    from docmax.dependencies import has_pandoc
+    if not has_pandoc():
+        console.print(Panel(
+            "[bold red]Missing dependency:[/bold red] Pandoc not found.\n"
+            "[dim]Run: [bold cyan]docmax setup[/bold cyan][/dim]",
+            title="[red]Dependency Error[/red]", border_style="red",
+        ))
+        sys.exit(1)
 
 
 def ghostscript_bin() -> str:
-    """Return the first available Ghostscript binary name."""
+    """Return the Ghostscript binary path — prefers saved config path."""
+    from docmax.config_manager import get_tool_path
+    saved = get_tool_path("ghostscript")
+    if saved and Path(saved).exists():
+        return saved
     for candidate in ("gs", "gswin64c", "gswin32c"):
         if shutil.which(candidate):
             return candidate
-    return "gs"  # fallback (will fail gracefully)
+    return "gs"  # will fail gracefully with a clear error
 
 
 # ---------------------------------------------------------------------------
@@ -161,7 +153,6 @@ def collect_files(
     extensions: set[str],
     recursive: bool = True,
 ) -> List[Path]:
-    """Collect all files with the given extensions from a directory."""
     pattern = "**/*" if recursive else "*"
     files = []
     for ext in extensions:

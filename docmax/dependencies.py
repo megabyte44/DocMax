@@ -1,119 +1,129 @@
+"""
+DocMax Dependencies — checks whether external tools are available.
+
+Resolution order for each tool:
+  1. Saved path in ~/.docmax/config.json  (set by `docmax setup`)
+  2. shutil.which (tool is on system PATH)
+"""
+
+from __future__ import annotations
+
 from pathlib import Path
+from shutil import which
 
 from rich.console import Console
 from rich.table import Table
-from shutil import which
+
 from docmax.config_manager import get_tool_path
 
 console = Console()
 
 
-def has_pandoc():
-    path = (
-        get_tool_path("pandoc")
-        or which("pandoc")
-    )
+# ---------------------------------------------------------------------------
+# Individual checks
+# ---------------------------------------------------------------------------
 
-    return path is not None
+def has_tesseract() -> bool:
+    return bool(get_tool_path("tesseract") or which("tesseract"))
 
-def has_tesseract():
-    path = (
-        get_tool_path("tesseract")
-        or which("tesseract")
-    )
 
-    return path is not None
+def has_ghostscript() -> bool:
+    # Saved under key "ghostscript" by setup.py
+    if get_tool_path("ghostscript"):
+        return True
+    # Also check common binary names directly on PATH
+    return any(which(b) for b in ("gs", "gswin64c", "gswin32c"))
 
-def has_pandoc():
-    path = (
-        get_tool_path("pandoc")
-        or which("pandoc")
-    )
 
-    return path is not None
+def has_poppler() -> bool:
+    if get_tool_path("poppler"):
+        return True
+    return bool(which("pdfinfo") or which("pdftotext"))
 
-def has_ghostscript():
-    path = (
-        get_tool_path("ghostscript")
-        or which("gswin64c")
-        or which("gswin32c")
-        or which("gs")
-    )
 
-    return path is not None
-def has_poppler():
-    path = (
-        get_tool_path("poppler")
-        or which("pdftotext")
-    )
+def has_pandoc() -> bool:
+    return bool(get_tool_path("pandoc") or which("pandoc"))
 
-    return path is not None
 
-def doctor():
+def has_xelatex() -> bool:
+    return bool(get_tool_path("xelatex") or which("xelatex"))
+
+
+# ---------------------------------------------------------------------------
+# Doctor (system check table)
+# ---------------------------------------------------------------------------
+
+def doctor() -> None:
     table = Table(title="DocMax System Check")
-
-    table.add_column("Dependency")
+    table.add_column("Dependency", style="bold")
     table.add_column("Status")
+    table.add_column("Path / Note", style="dim")
 
-    deps = [
-        ("Poppler", has_poppler()),
-        ("Tesseract", has_tesseract()),
-        ("Ghostscript", has_ghostscript()),
-        ("Pandoc", has_pandoc()),
+    checks = [
+        ("Tesseract OCR", has_tesseract, "tesseract", "OCR features"),
+        ("Ghostscript",   has_ghostscript, "ghostscript", "PDF compression"),
+        ("Poppler",       has_poppler, "poppler", "PDF→image, OCR on PDFs"),
+        ("Pandoc",        has_pandoc, "pandoc", "Document conversion"),
+        ("XeLaTeX",       has_xelatex, "xelatex", "PDF generation via Pandoc"),
     ]
 
-    for name, status in deps:
-        table.add_row(
-            name,
-            "✓ Installed" if status else "✗ Missing",
-        )
+    any_missing = False
+    for name, check_fn, config_key, purpose in checks:
+        ok = check_fn()
+        saved_path = get_tool_path(config_key)
+
+        if ok:
+            note = saved_path if saved_path else "(on PATH)"
+            table.add_row(name, "[green]✓ Installed[/green]", note)
+        else:
+            table.add_row(name, "[red]✗ Missing[/red]", f"needed for {purpose}")
+            any_missing = True
 
     console.print(table)
 
+    if any_missing:
+        console.print(
+            "\n[yellow]Run [bold cyan]docmax setup[/bold cyan] to install missing tools.[/yellow]"
+        )
+    else:
+        console.print("\n[green]All dependencies satisfied.[/green]")
 
-def check_poppler():
-    if has_poppler():
-        return True
 
+# ---------------------------------------------------------------------------
+# Gated checks (used inside workflows — print hint and return bool)
+# ---------------------------------------------------------------------------
+
+def _missing_hint(tool_name: str) -> None:
     console.print(
-        "\n[red]Poppler is required for PDF OCR.[/red]\n"
-        "Run:\n"
-        "[cyan]DocMax setup[/cyan]\n"
+        f"\n[red]{tool_name} is not installed or not on PATH.[/red]\n"
+        "Run [bold cyan]docmax setup[/bold cyan] to install it automatically.\n"
+        "Then run [bold cyan]docmax doctor[/bold cyan] to verify.\n"
     )
-    return False
 
 
-def check_tesseract():
+def check_tesseract() -> bool:
     if has_tesseract():
         return True
-
-    console.print(
-        "\n[red]Tesseract OCR is not installed.[/red]\n"
-        "Run:\n"
-        "[cyan]DocMax setup[/cyan]\n"
-    )
+    _missing_hint("Tesseract OCR")
     return False
 
 
-def check_ghostscript():
+def check_ghostscript() -> bool:
     if has_ghostscript():
         return True
-
-    console.print(
-        "\n[red]Ghostscript is not installed.[/red]\n"
-        "Run:\n"
-        "[cyan]DocMax setup[/cyan]\n"
-    )
+    _missing_hint("Ghostscript")
     return False
 
 
-def check_pandoc():
+def check_poppler() -> bool:
+    if has_poppler():
+        return True
+    _missing_hint("Poppler")
+    return False
+
+
+def check_pandoc() -> bool:
     if has_pandoc():
         return True
-
-    console.print(
-        "\n[red]Pandoc is not installed.[/red]\n"
-        "Run:\n"
-        "[cyan]DocMax setup[/cyan]\n"
-    )
+    _missing_hint("Pandoc")
     return False

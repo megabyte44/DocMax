@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from docmax.config_manager import get_tool_path
+
 from docmax.utils import (
     abort, console, ensure_parent, info, require_pandoc, success, warn,
 )
@@ -18,21 +18,20 @@ from docmax.config import DEFAULT_IMAGE_DPI, SUPPORTED_IMAGE_EXTS
 
 
 PANDOC_FORMAT_MAP = {
-    "pdf": "pdf",
-    "docx": "docx",
-    "md": "markdown",
+    "pdf":      "pdf",
+    "docx":     "docx",
+    "md":       "markdown",
     "markdown": "markdown",
-    "html": "html",
-    "txt": "plain",
-    "text": "plain",
-    "rst": "rst",
-    "odt": "odt",
-    "epub": "epub",
+    "html":     "html",
+    "txt":      "plain",
+    "text":     "plain",
+    "rst":      "rst",
+    "odt":      "odt",
+    "epub":     "epub",
 }
 
 
 def _ext_to_pandoc_format(ext: str) -> str:
-    """Convert a file extension to a Pandoc format name."""
     cleaned = ext.lstrip(".").lower()
     return PANDOC_FORMAT_MAP.get(cleaned, cleaned)
 
@@ -46,11 +45,6 @@ def convert(
     target_format: str,
     output: Optional[Path] = None,
 ) -> None:
-    """
-    Convert a document to the target format using Pandoc.
-
-    Supports: pdf, docx, md, html, txt, rst, odt, epub
-    """
     require_pandoc()
 
     if not input_path.exists():
@@ -63,16 +57,15 @@ def convert(
     pandoc_to = _ext_to_pandoc_format(target_format)
     pandoc_from = _ext_to_pandoc_format(input_path.suffix)
 
-    cmd = ["pandoc", str(input_path), "-f", pandoc_from, "-t", pandoc_to, "-o", str(out)]
+    # Resolve pandoc binary (may be in saved config)
+    from docmax.config_manager import get_tool_path
+    pandoc_bin = get_tool_path("pandoc") or "pandoc"
 
-    # PDF requires a PDF engine
+    cmd = [pandoc_bin, str(input_path), "-f", pandoc_from, "-t", pandoc_to, "-o", str(out)]
+
     if pandoc_to == "pdf":
-        xelatex = get_tool_path("xelatex")
-
-        if xelatex:
-            cmd += [f"--pdf-engine={xelatex}"]
-        else:
-            cmd += ["--pdf-engine=xelatex"]
+        xelatex = get_tool_path("xelatex") or "xelatex"
+        cmd += [f"--pdf-engine={xelatex}"]
 
     info(f"Converting [bold]{input_path.name}[/bold] -> [bold]{pandoc_to.upper()}[/bold]...")
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -91,11 +84,6 @@ def images_to_pdf(
     output: Optional[Path] = None,
     sort_files: bool = True,
 ) -> None:
-    """
-    Combine images from a directory (or a single image) into a PDF.
-
-    source can be a directory of images or a single image file.
-    """
     try:
         import img2pdf
     except ImportError:
@@ -138,11 +126,6 @@ def pdf_to_images(
     dpi: int = DEFAULT_IMAGE_DPI,
     fmt: str = "png",
 ) -> None:
-    """
-    Convert each page of a PDF to an image file.
-
-    fmt: png, jpeg, tiff
-    """
     try:
         from pdf2image import convert_from_path
     except ImportError:
@@ -151,11 +134,21 @@ def pdf_to_images(
     if not input_path.exists():
         abort(f"File not found: {input_path}")
 
+    # Pass poppler_path if saved in config (important on Windows)
+    from docmax.config_manager import get_tool_path
+    poppler_path_str = get_tool_path("poppler")
+    poppler_path = str(Path(poppler_path_str).parent) if poppler_path_str else None
+
     dest = output_dir or input_path.parent / (input_path.stem + "_images")
     dest.mkdir(parents=True, exist_ok=True)
 
     info(f"Converting PDF pages to {fmt.upper()} images (DPI={dpi})...")
-    pages = convert_from_path(str(input_path), dpi=dpi, fmt=fmt)
+
+    kwargs = dict(dpi=dpi, fmt=fmt)
+    if poppler_path:
+        kwargs["poppler_path"] = poppler_path
+
+    pages = convert_from_path(str(input_path), **kwargs)
 
     with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
         task = progress.add_task(f"Exporting {len(pages)} pages...", total=len(pages))
