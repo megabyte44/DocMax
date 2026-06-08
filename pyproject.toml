@@ -8,7 +8,11 @@ description = "DocMax — Unified Document Processing CLI. Forge your documents 
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-    {name = "Punith Naidu",email = "punithmedaramitta@gmail.com"}
+    { name = "Punith Naidu" }
+]
+
+maintainers = [
+    { name = "Punith Naidu", email = "punithmedaramitta@gmail.com" }
 ]
 license = { text = "MIT" }
 keywords = ["pdf", "ocr", "document", "cli", "conversion", "tesseract", "batch"]
